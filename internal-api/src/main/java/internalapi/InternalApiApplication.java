@@ -10,4 +10,6 @@ public class InternalApiApplication {
 		SpringApplication.run(InternalApiApplication.class, args);
 	}
 
+
+
 }
