@@ -1,0 +1,14 @@
+## Requirements
+- User should be able to add new model
+- A Model can have different statuses:
+  - Active, Intown, Inactive, Pending
+- User should be able to edit model
+  - Edit model profile details
+  - Edit model status 
+  - Edit/Add tags to models
+- User should be able to delete model
+- User should be able to add option for models
+- User should be able to confirm an option and convert it to a job
+- User should be able to add Jobs for models
+  - A job can have multiple models
+- User should be able to retreive amonthly/weekly calendar of options and jobs
