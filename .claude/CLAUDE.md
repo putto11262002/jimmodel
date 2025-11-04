@@ -6,6 +6,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a Next.js 16 project bootstrapped with `create-next-app`. It uses the App Router (React Server Components) with TypeScript, Tailwind CSS for styling, and ESLint for code quality.
 
+## Operation Workflow
+
+**IMPORTANT:** Before implementing any new feature or making changes:
+
+1. **Investigate First** - Always explore the existing codebase to understand current patterns and implementations
+2. **Use Appropriate Skills** - Leverage the Explore agent or component-context-builder skill to gather context
+3. **Understand Conventions** - Review similar existing code to match naming conventions, architecture patterns, and code style
+4. **Align with Existing Patterns** - Ensure new implementations follow established patterns in the codebase
+
+This approach prevents inconsistencies and ensures new code integrates seamlessly with the existing architecture.
+
 ## Development Environment
 
 **Package Manager:** pnpm (as indicated by `pnpm-lock.yaml`)
