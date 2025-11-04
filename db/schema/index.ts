@@ -84,8 +84,38 @@ export const modelImages = pgTable(
   }),
 );
 
+// Model Views Table (raw view events)
+export const modelViews = pgTable(
+  "model_views",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    modelId: uuid("model_id")
+      .notNull()
+      .references(() => models.id, { onDelete: "cascade" }),
+    viewerIdentifier: varchar("viewer_identifier", { length: 255 }).notNull(),
+    viewedAt: timestamp("viewed_at").notNull().defaultNow(),
+    ipAddress: varchar("ip_address", { length: 45 }),
+    userAgent: text("user_agent"),
+  },
+  (table) => ({
+    // Indexes for analytics queries
+    modelIdx: index("model_views_model_idx").on(table.modelId),
+    viewedAtIdx: index("model_views_viewed_at_idx").on(table.viewedAt),
+    viewerIdx: index("model_views_viewer_idx").on(table.viewerIdentifier),
+    // Composite index for efficient GROUP BY queries
+    modelViewerIdx: index("model_views_model_viewer_idx").on(
+      table.modelId,
+      table.viewerIdentifier,
+    ),
+  }),
+);
+
 // Export types
 export type Model = typeof models.$inferSelect;
 export type NewModel = typeof models.$inferInsert;
 export type ModelImage = typeof modelImages.$inferSelect;
 export type NewModelImage = typeof modelImages.$inferInsert;
+export type ModelView = typeof modelViews.$inferSelect;
+export type NewModelView = typeof modelViews.$inferInsert;
