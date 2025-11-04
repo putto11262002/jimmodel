@@ -48,6 +48,9 @@ jimmodel/
 ├── app/              # Next.js App Router (React Server Components)
 │   ├── layout.tsx    # Root layout component (metadata, fonts, styling)
 │   └── page.tsx      # Home page (App Router default: app/page.tsx → /)
+├── lib/              # Shared utilities and helpers
+│   ├── actions/      # Server actions (utilities + feature files like users.ts, posts.ts)
+│   └── validators/   # Zod schemas for input validation
 ├── db/               # Database layer
 │   ├── index.ts      # Drizzle database client (Neon connection)
 │   └── schema/       # Database schema definitions
@@ -86,6 +89,14 @@ jimmodel/
 - Define schemas in `db/schema/` (one file per domain recommended)
 - Migrations auto-generated in `drizzle/` by Drizzle Kit
 - Connection string stored in `.env.local` as `DATABASE_URL`
+
+**Server Actions:**
+- Type-safe server actions with automatic validation using Zod schemas
+- All actions return `ActionState<T>` (discriminated union: success or error)
+- Group related actions by feature in single files (e.g., `lib/actions/users.ts`)
+- Validators defined in `lib/validators/` using Zod schemas
+- Action utilities in `lib/actions/` (createAction, handleActionError, types, etc.)
+- See `lib/actions/README.md` for complete documentation and patterns
 
 **ESLint Configuration:**
 - Extends `eslint-config-next/core-web-vitals` for Core Web Vitals best practices
