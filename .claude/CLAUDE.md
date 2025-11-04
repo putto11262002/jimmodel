@@ -118,3 +118,13 @@ jimmodel/
 - Tailwind CSS classes can be used directly in JSX; no need for external CSS files for most styling
 - TypeScript strict mode is enabled, so maintain type safety
 
+## Documentation
+
+### `docs/components/`
+
+This directory contains implementation catalogs for major features and components of the project. Each file documents a specific aspect/feature (e.g., database schema, authentication, API routes) with context about implementation details, file locations, libraries used, and relevant documentation links.
+
+**Purpose:** Help current and future developers understand what was built, where the code lives, and how it works.
+
+**See the documentation skill for detailed conventions and templates.**
+
