@@ -65,10 +65,7 @@ export function handleActionError(err: unknown): ActionState<never> {
   }
 
   // Unknown error type
-  return error(
-    "An unexpected error occurred",
-    ActionErrorCode.INTERNAL_ERROR,
-  );
+  return error("An unexpected error occurred", ActionErrorCode.INTERNAL_ERROR);
 }
 
 /**
@@ -112,7 +109,7 @@ export function handleActionError(err: unknown): ActionState<never> {
  * }
  * ```
  */
-export function createAction<TInput extends z.ZodTypeAny, TOutput>(config: {
+export function createAction<TInput extends z.ZodObject, TOutput>(config: {
   schema: TInput;
   handler: ActionHandler<z.infer<TInput>, TOutput>;
 }) {
@@ -173,7 +170,7 @@ export function createAction<TInput extends z.ZodTypeAny, TOutput>(config: {
  * @todo Implement actual authentication check (e.g., with next-auth, clerk, etc.)
  */
 export function createAuthenticatedAction<
-  TInput extends z.ZodTypeAny,
+  TInput extends z.ZodObject,
   TOutput,
 >(config: {
   schema: TInput;
