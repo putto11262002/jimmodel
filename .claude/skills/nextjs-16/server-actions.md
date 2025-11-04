@@ -87,10 +87,14 @@ lib/
 │   ├── posts.ts            # All post-related actions
 │   ├── comments.ts         # All comment-related actions
 │   └── auth.ts             # All authentication actions
-└── validators/
-    ├── user.ts             # User-related Zod schemas
-    ├── post.ts             # Post-related Zod schemas
-    └── common.ts           # Shared/reusable schemas
+├── validators/
+│   ├── user.ts             # User-related Zod schemas
+│   ├── post.ts             # Post-related Zod schemas
+│   └── common.ts           # Shared/reusable schemas
+└── types/
+    ├── user.ts             # Application-level user types
+    ├── post.ts             # Application-level post types
+    └── index.ts            # Re-exports all types
 ```
 
 **Convention:** Group all actions for a feature domain in a single file (e.g., `lib/actions/users.ts` contains all user CRUD operations).
@@ -100,6 +104,7 @@ lib/
 - Related functionality stays together
 - Easier discovery of available actions
 - Less import boilerplate
+- Clear separation between storage types and application logic types
 
 ## Creating Actions
 
@@ -223,9 +228,18 @@ export const getCurrentUser = createUnsafeAction(async () => {
 
 ## Validators (Zod Schemas)
 
-### Location
+Input validation is handled using Zod schemas that mirror your database schema structure. This ensures type safety and consistency between validation, storage, and client code.
 
-All Zod schemas live in `lib/validators/`, organized by domain:
+**See the complete [Validation Schemas Reference](./validation.md) for:**
+- Schema-first validation best practices
+- File organization and naming conventions
+- Complex validation examples (custom refinement, date ranges, composition)
+- Common validators and reusable patterns
+- Error handling strategies
+
+### Quick Overview
+
+Validators are organized in `lib/validators/`:
 
 ```
 lib/validators/
@@ -235,108 +249,9 @@ lib/validators/
 └── common.ts     # Shared schemas (pagination, search, ID formats)
 ```
 
-### Conventions
+**Important:** When creating validators, always mirror your database schema constraints to prevent validation/storage mismatches. See the [Validation Reference](./validation.md) for detailed examples and best practices.
 
-**1. Naming:** Descriptive names ending with `Schema`
-
-```typescript
-createUserSchema, updateUserSchema, deleteUserSchema
-```
-
-**2. Export inferred types:** Always export TypeScript types for reuse
-
-```typescript
-// lib/validators/user.ts
-export const createUserSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  age: z.number().min(18, 'Must be 18 or older').optional(),
-});
-
-export type CreateUserInput = z.infer<typeof createUserSchema>;
-```
-
-**3. User-friendly error messages:** Provide clear validation feedback
-
-```typescript
-email: z.string().email('Please enter a valid email address'),
-name: z.string().min(2, 'Name must be at least 2 characters'),
-age: z.number().min(18, 'You must be 18 or older'),
-```
-
-**4. Reuse common schemas:** Extract shared patterns to `common.ts`
-
-```typescript
-// lib/validators/common.ts
-export const paginationSchema = z.object({
-  page: z.number().min(1).default(1),
-  limit: z.number().min(1).max(100).default(20),
-});
-
-export const emailSchema = z.string().email('Invalid email address');
-export const uuidSchema = z.string().uuid('Invalid ID format');
-export const idSchema = z.string().min(1, 'ID is required');
-```
-
-**Location:** `lib/validators/common.ts:1`
-
-### Complex Validation Examples
-
-**Custom refinement:**
-```typescript
-export const createPostSchema = z.object({
-  title: z.string().min(5).max(200),
-  content: z.string().min(10).max(10000),
-  published: z.boolean().default(false),
-  publishedAt: z.date().optional(),
-}).refine(
-  (data) => {
-    // If published, must have publishedAt
-    if (data.published && !data.publishedAt) {
-      return false;
-    }
-    return true;
-  },
-  {
-    message: 'Published posts must have a publish date',
-    path: ['publishedAt'], // Attach error to specific field
-  }
-);
-```
-
-**Date range validation:**
-```typescript
-export const dateRangeSchema = z.object({
-  startDate: z.date().optional(),
-  endDate: z.date().optional(),
-}).refine(
-  (data) => {
-    if (data.startDate && data.endDate) {
-      return data.startDate <= data.endDate;
-    }
-    return true;
-  },
-  {
-    message: 'Start date must be before or equal to end date',
-    path: ['endDate'],
-  }
-);
-```
-
-**Location:** `lib/validators/common.ts:65`
-
-**Schema composition:**
-```typescript
-// Compose multiple schemas
-export const paginatedQuerySchema = paginationSchema
-  .merge(sortingSchema)
-  .merge(searchSchema);
-
-// Extend existing schema
-export const updateUserSchema = createUserSchema.partial().extend({
-  id: z.string().uuid(),
-});
-```
+**Note on Application Types:** While validators should mirror database schema, your server actions may return application-level types (defined in `lib/types/`) that don't match the database structure. See the [Application-Level Types](#application-level-types) section for details on when and how to define these types.
 
 ## Error Handling
 
@@ -664,6 +579,336 @@ export const publishPost = createAuthenticatedAction({
 });
 ```
 
+## Application-Level Types
+
+### Overview
+
+While database schema types (`db/schema/index.ts`) represent how data is stored, application-level types (`lib/types/`) represent how data flows through your business logic. These types often don't align 1:1 with storage schema.
+
+**Location:** `lib/types/`
+
+**When to use `lib/types/`:**
+- DTOs (Data Transfer Objects) that combine multiple tables
+- View models that transform database data for client consumption
+- Computed or derived entities that don't exist in the database
+- Business logic types that aggregate or reshape data
+- Types representing application state or workflow entities
+
+**When NOT to use `lib/types/`:**
+- Simple wrappers around database types (use schema exports instead)
+- Types that exactly mirror one database table (use Drizzle's `$inferSelect`)
+- Internal action types (keep those in action files)
+
+### Database Types vs Application Types
+
+**Database types** (from `db/schema/index.ts`):
+```typescript
+// Exported from schema - represents storage
+export type Model = typeof models.$inferSelect;
+export type NewModel = typeof models.$inferInsert;
+
+// Example: raw database record
+{
+  id: "uuid-123",
+  name: "John Doe",
+  dateOfBirth: "1990-01-15",
+  height: 180.5,
+  weight: 75.0,
+  profileImageURL: "/images/profile.jpg",
+  createdAt: Date,
+  updatedAt: Date,
+}
+```
+
+**Application types** (in `lib/types/`):
+```typescript
+// lib/types/model.ts - represents business logic
+export type ModelProfile = {
+  id: string;
+  name: string;
+  displayName: string; // nickname or name
+  age: number; // computed from dateOfBirth
+  category: 'kids' | 'male' | 'female' | 'seniors'; // computed
+  measurements: {
+    height: number;
+    weight: number;
+    bmi: number; // computed
+  };
+  images: {
+    profile: string;
+    gallery: string[];
+  };
+  status: {
+    isPublished: boolean;
+    isLocal: boolean;
+    isInTown: boolean;
+  };
+};
+
+// DTOs combining multiple tables
+export type ModelWithImages = {
+  model: Model;
+  images: ModelImage[];
+  imageCount: number;
+};
+
+// Client-safe types (no sensitive data)
+export type PublicModelProfile = Omit<ModelProfile, 'status'> & {
+  isAvailable: boolean; // computed from status
+};
+```
+
+### Directory Structure
+
+```
+lib/types/
+├── index.ts        # Re-exports all types
+├── model.ts        # Model-related application types
+├── common.ts       # Shared application types (DTOs, result types)
+└── api.ts          # API response/request types
+```
+
+### Example: Creating Application Types
+
+**Step 1: Create the types file**
+
+```typescript
+// lib/types/model.ts
+import type { Model, ModelImage } from '@/db/schema';
+
+/**
+ * Model profile for public display
+ * Combines database data with computed fields
+ */
+export type ModelProfile = {
+  id: string;
+  name: string;
+  displayName: string;
+  age: number | null;
+  category: string;
+  measurements: ModelMeasurements | null;
+  profileImage: string | null;
+  isAvailable: boolean;
+};
+
+/**
+ * Model measurements with computed BMI
+ */
+export type ModelMeasurements = {
+  height: number;
+  weight: number;
+  bmi: number;
+  hips: number | null;
+};
+
+/**
+ * Model with related images
+ */
+export type ModelWithImages = {
+  id: string;
+  name: string;
+  displayName: string;
+  profileImage: string | null;
+  gallery: Array<{
+    id: string;
+    url: string;
+    type: string | null;
+    order: number;
+  }>;
+};
+
+/**
+ * Helper to convert database Model to ModelProfile
+ */
+export function toModelProfile(model: Model): ModelProfile {
+  const age = model.dateOfBirth
+    ? calculateAge(model.dateOfBirth)
+    : null;
+
+  const bmi = model.height && model.weight
+    ? calculateBMI(Number(model.height), Number(model.weight))
+    : null;
+
+  return {
+    id: model.id,
+    name: model.name,
+    displayName: model.nickName || model.name,
+    age,
+    category: model.category,
+    measurements: model.height && model.weight ? {
+      height: Number(model.height),
+      weight: Number(model.weight),
+      bmi,
+      hips: model.hips ? Number(model.hips) : null,
+    } : null,
+    profileImage: model.profileImageURL,
+    isAvailable: model.published && model.inTown,
+  };
+}
+
+function calculateAge(dateOfBirth: Date): number {
+  const today = new Date();
+  const birthDate = new Date(dateOfBirth);
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age;
+}
+
+function calculateBMI(heightCm: number, weightKg: number): number {
+  const heightM = heightCm / 100;
+  return Number((weightKg / (heightM * heightM)).toFixed(1));
+}
+```
+
+**Step 2: Export from index**
+
+```typescript
+// lib/types/index.ts
+export type {
+  ModelProfile,
+  ModelMeasurements,
+  ModelWithImages,
+} from './model';
+export { toModelProfile } from './model';
+```
+
+**Step 3: Use in server actions**
+
+```typescript
+// lib/actions/models.ts
+'use server';
+
+import { createAction } from '@/lib/actions';
+import { db } from '@/db';
+import { models } from '@/db/schema';
+import { eq } from 'drizzle-orm';
+import { toModelProfile, type ModelProfile } from '@/lib/types';
+
+export const getModelProfile = createAction({
+  schema: z.object({ id: z.string().uuid() }),
+  handler: async ({ id }): Promise<ModelProfile> => {
+    const model = await db.query.models.findFirst({
+      where: eq(models.id, id),
+    });
+
+    if (!model) {
+      throw new Error('Model not found');
+    }
+
+    // Convert database type to application type
+    return toModelProfile(model);
+  },
+});
+```
+
+### Best Practices for Application Types
+
+**1. Keep transformation logic with types**
+```typescript
+// ✅ Good - transformation function near type definition
+export type ModelProfile = { /* ... */ };
+export function toModelProfile(model: Model): ModelProfile { /* ... */ }
+
+// ❌ Bad - scattered transformation logic
+// Type in lib/types, transform in lib/utils, used in actions
+```
+
+**2. Document the purpose of each type**
+```typescript
+/**
+ * Public model profile returned to clients
+ * Excludes sensitive fields and includes computed properties
+ */
+export type PublicModelProfile = { /* ... */ };
+```
+
+**3. Use descriptive names that indicate usage**
+```typescript
+// ✅ Good - clear intent
+ModelProfile, PublicModelProfile, ModelListItem, ModelWithImages
+
+// ❌ Bad - ambiguous
+Model2, ModelData, ModelStuff, ProcessedModel
+```
+
+**4. Avoid deep nesting**
+```typescript
+// ✅ Good - flat, readable structure
+export type ModelProfile = {
+  id: string;
+  name: string;
+  measurements: ModelMeasurements; // separate type
+};
+
+// ❌ Bad - deeply nested
+export type ModelProfile = {
+  id: string;
+  data: {
+    personal: {
+      name: { first: string; last: string };
+      // ...
+    };
+  };
+};
+```
+
+**5. Export transformation utilities**
+```typescript
+// lib/types/model.ts
+export function toModelProfile(model: Model): ModelProfile { /* ... */ }
+export function toPublicProfile(profile: ModelProfile): PublicModelProfile { /* ... */ }
+export function toModelListItem(model: Model): ModelListItem { /* ... */ }
+```
+
+### Common Patterns
+
+**1. DTOs for combined data**
+```typescript
+export type UserWithPosts = {
+  user: User;
+  posts: Post[];
+  postCount: number;
+};
+```
+
+**2. List item types (optimized for lists)**
+```typescript
+export type ModelListItem = {
+  id: string;
+  name: string;
+  profileImage: string | null;
+  category: string;
+  isAvailable: boolean;
+};
+```
+
+**3. Form data types (different from DB types)**
+```typescript
+export type ModelFormData = {
+  name: string;
+  nickName?: string;
+  gender: string;
+  dateOfBirth: string; // ISO string, not Date
+  // ... optimized for form handling
+};
+```
+
+**4. API response wrappers**
+```typescript
+export type PaginatedResponse<T> = {
+  data: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    hasMore: boolean;
+  };
+};
+```
+
 ## Best Practices
 
 ### 1. Group by Feature
@@ -977,130 +1222,8 @@ export async function myComplexAction(input: unknown) {
 
   // Continue with logic...
 }
-```
 
 **Location:** `lib/actions/types.ts:104`
-
-## Testing Actions
-
-### Unit Testing
-
-Test actions by calling them with mock input:
-
-```typescript
-import { describe, it, expect } from 'vitest';
-import { createUser } from '@/lib/actions/users';
-
-describe('createUser', () => {
-  it('should create user with valid input', async () => {
-    const result = await createUser({
-      email: 'test@example.com',
-      name: 'Test User',
-    });
-
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.email).toBe('test@example.com');
-    }
-  });
-
-  it('should fail with invalid email', async () => {
-    const result = await createUser({
-      email: 'invalid-email',
-      name: 'Test User',
-    });
-
-    expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(result.error.code).toBe('VALIDATION_ERROR');
-      expect(result.error.fieldErrors?.email).toBeDefined();
-    }
-  });
-
-  it('should handle duplicate email', async () => {
-    // Create user first time
-    await createUser({ email: 'test@example.com', name: 'User 1' });
-
-    // Try to create again
-    const result = await createUser({
-      email: 'test@example.com',
-      name: 'User 2',
-    });
-
-    expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(result.error.code).toBe('CONFLICT');
-    }
-  });
-});
-```
-
-### Integration Testing
-
-Test actions with real database operations using test database:
-
-```typescript
-import { beforeEach, afterEach } from 'vitest';
-import { db } from '@/db';
-
-beforeEach(async () => {
-  // Clean database before each test
-  await db.delete(users);
-});
-
-afterEach(async () => {
-  // Clean up after test
-  await db.delete(users);
-});
-```
-
-## Migration Guide
-
-### From Direct API Routes
-
-**Before (API route):**
-```typescript
-// app/api/users/route.ts
-export async function POST(request: Request) {
-  const body = await request.json();
-
-  // Manual validation
-  if (!body.email || !body.name) {
-    return Response.json({ error: 'Missing fields' }, { status: 400 });
-  }
-
-  try {
-    const user = await db.insert(users).values(body);
-    return Response.json(user);
-  } catch (err) {
-    return Response.json({ error: 'Failed' }, { status: 500 });
-  }
-}
-```
-
-**After (Server action):**
-```typescript
-// lib/actions/users.ts
-'use server';
-
-export const createUser = createAction({
-  schema: z.object({
-    email: z.string().email(),
-    name: z.string().min(2),
-  }),
-  handler: async (input) => {
-    const [user] = await db.insert(users).values(input).returning();
-    return { id: user.id, email: user.email };
-  },
-});
-```
-
-**Benefits:**
-- Automatic validation with Zod
-- Type safety end-to-end
-- Consistent error handling
-- Less boilerplate
-- Easier to test
 
 ## Quick Reference
 
@@ -1138,29 +1261,54 @@ export const createUser = createAction({
 
 ## Common Validators
 
-Located in `lib/validators/common.ts`:
+Reusable schemas located in `lib/validators/common.ts`:
 
-```typescript
-// IDs
-uuidSchema          // UUID format validation
-idSchema            // Non-empty string ID
+- **IDs:** `uuidSchema`, `idSchema`
+- **Common fields:** `emailSchema`, `urlSchema`, `phoneSchema`
+- **Pagination:** `paginationSchema`, `sortingSchema`, `searchSchema`, `paginatedQuerySchema`
+- **Date ranges:** `dateRangeSchema`
 
-// Common fields
-emailSchema         // Email validation
-urlSchema           // URL validation
-phoneSchema         // Phone number validation
+See the [Validation Reference](./validation.md) for complete documentation and examples of using these validators.
 
-// Pagination
-paginationSchema    // page, limit
-sortingSchema       // sortBy, sortOrder
-searchSchema        // search term
-paginatedQuerySchema // All of above combined
+## Key Directories Summary
 
-// Date ranges
-dateRangeSchema     // startDate, endDate with validation
+| Directory | Purpose | When to Use |
+|-----------|---------|-------------|
+| `lib/actions/` | Server actions (business logic) | Implement mutations and queries |
+| `lib/validators/` | Zod validation schemas | Input validation (mirror DB schema) |
+| `lib/types/` | Application-level types | DTOs, view models, computed types |
+| `db/schema/` | Database schema (Drizzle) | Define tables and storage structure |
+
+**Type Flow:**
+```
+Client Input → Validator (Zod) → Action → Database (Schema Types) → Application Types → Client Response
 ```
 
-**Location:** `lib/validators/common.ts:1`
+**Example:**
+```typescript
+// 1. Validator (mirrors DB schema)
+const createModelSchema = z.object({
+  name: z.string().max(255),
+  // ...matches db/schema columns
+});
+
+// 2. Action (uses validator, returns app type)
+export const createModel = createAction({
+  schema: createModelSchema,
+  handler: async (input) => {
+    const model = await db.insert(models).values(input).returning();
+    return toModelProfile(model); // Returns ModelProfile, not Model
+  },
+});
+
+// 3. Application type (different from DB type)
+export type ModelProfile = {
+  id: string;
+  name: string;
+  age: number; // computed
+  // ...transformed from Model
+};
+```
 
 ## Related Documentation
 
