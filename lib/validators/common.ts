@@ -4,7 +4,7 @@
  * Reusable validation schemas that can be composed into other schemas.
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * Pagination schema for list queries
@@ -16,15 +16,9 @@ export const paginationSchema = z.object({
 
 export type PaginationInput = z.infer<typeof paginationSchema>;
 
-/**
- * Sorting schema for list queries
- */
-export const sortingSchema = z.object({
-  sortBy: z.string().optional(),
-  sortOrder: z.enum(['asc', 'desc']).default('desc'),
-});
+export const sortOrderSchema = z.enum(["asc", "desc"]).default("asc");
 
-export type SortingInput = z.infer<typeof sortingSchema>;
+export type SortOrder = z.infer<typeof sortOrderSchema>;
 
 /**
  * Search schema for filtering
@@ -36,46 +30,37 @@ export const searchSchema = z.object({
 export type SearchInput = z.infer<typeof searchSchema>;
 
 /**
- * Combined pagination, sorting, and search schema
- */
-export const paginatedQuerySchema = paginationSchema
-  .merge(sortingSchema)
-  .merge(searchSchema);
-
-export type PaginatedQueryInput = z.infer<typeof paginatedQuerySchema>;
-
-/**
  * ID parameter schemas
  */
-export const uuidSchema = z.string().uuid('Invalid ID format');
-export const idSchema = z.string().min(1, 'ID is required');
+export const uuidSchema = z.string().uuid("Invalid ID format");
+export const idSchema = z.string().min(1, "ID is required");
 
 /**
  * Common field schemas
  */
-export const emailSchema = z.string().email('Invalid email address');
-export const urlSchema = z.string().url('Invalid URL');
+export const emailSchema = z.string().email("Invalid email address");
+export const urlSchema = z.string().url("Invalid URL");
 export const phoneSchema = z
   .string()
-  .regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number');
+  .regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number");
 
-/**
- * Date range schema
- */
-export const dateRangeSchema = z.object({
-  startDate: z.date().optional(),
-  endDate: z.date().optional(),
-}).refine(
-  (data) => {
-    if (data.startDate && data.endDate) {
-      return data.startDate <= data.endDate;
-    }
-    return true;
-  },
-  {
-    message: 'Start date must be before or equal to end date',
-    path: ['endDate'],
-  }
-);
-
-export type DateRangeInput = z.infer<typeof dateRangeSchema>;
+export const uploadedImageSchema = z
+  .instanceof(File, { message: "File is required" })
+  .refine(
+    (file) => {
+      const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+      return validTypes.includes(file.type);
+    },
+    {
+      message: "File must be a valid image (JPEG, PNG, or WebP)",
+    },
+  )
+  .refine(
+    (file) => {
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      return file.size <= maxSize;
+    },
+    {
+      message: "File size must be less than 10MB",
+    },
+  );

@@ -1,16 +1,22 @@
+import { Category } from "@/lib/data/categories";
+import { Country } from "@/lib/data/countries";
+import { EyeColor } from "@/lib/data/eye-colors";
+import { Gender } from "@/lib/data/genders";
+import { HairColor } from "@/lib/data/hair-colors";
+import { ImageType } from "@/lib/data/image-types";
+import { relations, sql } from "drizzle-orm";
 import {
-  pgTable,
-  uuid,
-  varchar,
-  text,
   boolean,
-  numeric,
-  timestamp,
-  integer,
   date,
   index,
+  integer,
+  numeric,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+  varchar,
 } from "drizzle-orm/pg-core";
-import { sql } from "drizzle-orm";
 
 // Models Table
 export const models = pgTable(
@@ -21,9 +27,9 @@ export const models = pgTable(
       .default(sql`gen_random_uuid()`),
     name: varchar("name", { length: 255 }).notNull(),
     nickName: varchar("nick_name", { length: 100 }),
-    gender: varchar("gender", { length: 20 }).notNull(),
-    dateOfBirth: date("date_of_birth"),
-    nationality: varchar("nationality", { length: 100 }),
+    gender: varchar("gender", { length: 20 }).notNull().$type<Gender>(),
+    dateOfBirth: date("date_of_birth", { mode: "date" }),
+    nationality: varchar("nationality", { length: 100 }).$type<Country>(),
     ethnicity: varchar("ethnicity", { length: 100 }),
     talents: text("talents").array(),
     bio: text("bio"),
@@ -32,17 +38,17 @@ export const models = pgTable(
     local: boolean("local").notNull().default(false),
     inTown: boolean("in_town").notNull().default(false),
     published: boolean("published").notNull().default(false),
-    category: varchar("category", { length: 20 }).notNull(),
+    category: varchar("category", { length: 20 }).notNull().$type<Category>(),
     // Note: category should be computed based on age and gender
     // if age < 18 then "kids"
     // else if age >= 60 then "seniors"
     // else gender
 
-    height: numeric("height", { precision: 5, scale: 2 }), // in cm
-    weight: numeric("weight", { precision: 5, scale: 2 }), // in kg
-    hips: numeric("hips", { precision: 5, scale: 2 }), // in cm
-    hairColor: text("hair_color"),
-    eyeColor: text("eye_color"),
+    height: numeric("height", { precision: 5, scale: 2, mode: "number" }), // in cm
+    weight: numeric("weight", { precision: 5, scale: 2, mode: "number" }), // in kg
+    hips: numeric("hips", { precision: 5, scale: 2, mode: "number" }), // in cm
+    hairColor: text("hair_color").$type<HairColor>(),
+    eyeColor: text("eye_color").$type<EyeColor>(),
 
     profileImageURL: text("profile_image_url"),
 
@@ -72,7 +78,7 @@ export const modelImages = pgTable(
       .notNull()
       .references(() => models.id, { onDelete: "cascade" }),
     url: text("url").notNull(),
-    type: text("type"),
+    type: text("type").$type<ImageType>(),
     order: integer("order").notNull().default(0),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
@@ -83,6 +89,17 @@ export const modelImages = pgTable(
     orderIdx: index("model_images_order_idx").on(table.order),
   }),
 );
+
+export const modelRelationships = relations(models, ({ many }) => ({
+  images: many(modelImages),
+}));
+
+export const modelImageRelationships = relations(modelImages, ({ one }) => ({
+  model: one(models, {
+    fields: [modelImages.modelId],
+    references: [models.id],
+  }),
+}));
 
 // Model Views Table (raw view events)
 export const modelViews = pgTable(
