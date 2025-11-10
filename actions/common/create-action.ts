@@ -6,7 +6,8 @@
  */
 
 import { z } from "zod";
-import { ActionState, ActionErrorCode, success, error } from "./types";
+import { ActionState } from "@/actions/common/types";
+import { success, error, handleActionError, ActionErrorCode } from "@/actions/common/utils";
 
 /**
  * Handler function type for server actions
@@ -16,62 +17,18 @@ type ActionHandler<TInput, TOutput> = (
 ) => Promise<TOutput> | TOutput;
 
 /**
- * Handles errors from action handlers and maps them to ActionState errors
- *
- * This function provides centralized error handling with:
- * - Automatic logging
- * - Pattern matching for common database errors
- * - Consistent error formatting
- *
- * @param err - The caught error
- * @returns ActionState with error information
- *
- * @example
- * ```ts
- * try {
- *   await db.insert(users).values(data);
- * } catch (err) {
- *   return handleActionError(err);
- * }
- * ```
+ * Input mapper function that transforms raw input (e.g., FormData)
+ * into a format suitable for Zod schema validation
  */
-export function handleActionError(err: unknown): ActionState<never> {
-  // Log error for debugging
-  console.error("Action error:", err);
-
-  // Handle Error instances
-  if (err instanceof Error) {
-    // Database unique constraint violations
-    if (
-      err.message.includes("unique constraint") ||
-      err.message.includes("duplicate key")
-    ) {
-      return error(
-        "A record with this information already exists",
-        ActionErrorCode.CONFLICT,
-      );
-    }
-
-    // Database foreign key violations
-    if (err.message.includes("foreign key")) {
-      return error(
-        "Referenced record does not exist",
-        ActionErrorCode.NOT_FOUND,
-      );
-    }
-
-    // Generic error with message
-    return error(err.message, ActionErrorCode.INTERNAL_ERROR);
-  }
-
-  // Unknown error type
-  return error("An unexpected error occurred", ActionErrorCode.INTERNAL_ERROR);
-}
+export type InputMapper<TRawInput = unknown, TMappedInput = unknown> = (
+  input: TRawInput
+) => TMappedInput | Promise<TMappedInput>;
 
 /**
  * Creates a type-safe server action with automatic validation and error handling
  *
  * This function wraps your action logic with:
+ * - Optional input mapping before validation (e.g., FormData to object)
  * - Automatic Zod schema validation
  * - Structured error handling
  * - Consistent return types (ActionState<T>)
@@ -79,18 +36,18 @@ export function handleActionError(err: unknown): ActionState<never> {
  *
  * @param config - Configuration object
  * @param config.schema - Zod schema for validating input
+ * @param config.mapper - Optional function to transform raw input before validation
  * @param config.handler - Async function that executes the action logic
  * @returns A server action function that returns ActionState<TOutput>
  *
  * @example
  * ```ts
- * // Define your schema
+ * // Example 1: Using Zod schema directly (traditional approach for JSON input)
  * const createUserSchema = z.object({
  *   email: z.string().email(),
  *   name: z.string().min(2),
  * });
  *
- * // Create the action
  * export const createUser = createAction({
  *   schema: createUserSchema,
  *   handler: async (input) => {
@@ -100,23 +57,70 @@ export function handleActionError(err: unknown): ActionState<never> {
  *   }
  * });
  *
- * // Use in client component
- * const result = await createUser({ email: 'test@example.com', name: 'John' });
- * if (result.success) {
- *   console.log(result.data); // typed as User
- * } else {
- *   console.log(result.error.message);
- * }
+ * // Example 2: Using mapper for FormData with Zod schema
+ * const uploadFileSchema = z.object({
+ *   file: z.instanceof(File),
+ *   title: z.string().min(3),
+ *   description: z.string().optional(),
+ * });
+ *
+ * export const uploadFile = createAction({
+ *   schema: uploadFileSchema,
+ *   mapper: (formData: FormData) => ({
+ *     file: formData.get('file'),
+ *     title: formData.get('title'),
+ *     description: formData.get('description') || undefined,
+ *   }),
+ *   handler: async (input) => {
+ *     // input is validated against uploadFileSchema
+ *     const url = await uploadToStorage(input.file);
+ *     return { url, title: input.title };
+ *   }
+ * });
+ *
+ * // Example 3: Complex FormData mapping with array handling
+ * const createPostSchema = z.object({
+ *   title: z.string().min(3),
+ *   content: z.string().min(10),
+ *   tags: z.array(z.string()),
+ *   published: z.boolean(),
+ * });
+ *
+ * export const createPost = createAction({
+ *   schema: createPostSchema,
+ *   mapper: (formData: FormData) => {
+ *     // Handle array of tags from FormData
+ *     const tagsString = formData.get('tags');
+ *     const tags = typeof tagsString === 'string'
+ *       ? tagsString.split(',').map(t => t.trim()).filter(Boolean)
+ *       : [];
+ *
+ *     return {
+ *       title: formData.get('title'),
+ *       content: formData.get('content'),
+ *       tags,
+ *       published: formData.get('published') === 'true',
+ *     };
+ *   },
+ *   handler: async (input) => {
+ *     // Process the validated post data
+ *     return await db.insert(posts).values(input);
+ *   }
+ * });
  * ```
  */
-export function createAction<TInput extends z.ZodObject, TOutput>(config: {
-  schema: TInput;
-  handler: ActionHandler<z.infer<TInput>, TOutput>;
-}) {
+export function createAction<TSchema extends z.ZodObject<any>, TOutput>(config: {
+  schema: TSchema;
+  mapper?: InputMapper<any, any>;
+  handler: ActionHandler<z.infer<TSchema>, TOutput>;
+}): (rawInput: unknown) => Promise<ActionState<TOutput>> {
   return async (rawInput: unknown): Promise<ActionState<TOutput>> => {
     try {
-      // 1. Validate input with Zod schema
-      const parseResult = config.schema.safeParse(rawInput);
+      // Apply mapper if provided, otherwise use raw input
+      const mappedInput = config.mapper ? await config.mapper(rawInput) : rawInput;
+
+      // Validate with Zod schema
+      const parseResult = config.schema.safeParse(mappedInput);
 
       if (!parseResult.success) {
         // Extract field-level errors from Zod
@@ -128,13 +132,13 @@ export function createAction<TInput extends z.ZodObject, TOutput>(config: {
         );
       }
 
-      // 2. Execute handler with validated & typed input
+      // Execute handler with validated & typed input
       const result = await config.handler(parseResult.data);
 
-      // 3. Return success with data
+      // Return success with data
       return success(result);
     } catch (err) {
-      // 4. Handle unexpected errors
+      // Handle unexpected errors
       return handleActionError(err);
     }
   };
@@ -150,11 +154,13 @@ export function createAction<TInput extends z.ZodObject, TOutput>(config: {
  *
  * @param config - Configuration object
  * @param config.schema - Zod schema for validating input
+ * @param config.mapper - Optional function to transform raw input before validation
  * @param config.handler - Async function with userId injected
  * @returns A server action that requires authentication
  *
  * @example
  * ```ts
+ * // Example 1: With Zod schema (JSON input)
  * export const updateProfile = createAuthenticatedAction({
  *   schema: z.object({ name: z.string() }),
  *   handler: async ({ name, userId }) => {
@@ -165,17 +171,37 @@ export function createAction<TInput extends z.ZodObject, TOutput>(config: {
  *     return { success: true };
  *   }
  * });
+ *
+ * // Example 2: With mapper for FormData
+ * const uploadAvatarSchema = z.object({
+ *   avatar: z.instanceof(File),
+ *   altText: z.string().optional(),
+ * });
+ *
+ * export const uploadAvatar = createAuthenticatedAction({
+ *   schema: uploadAvatarSchema,
+ *   mapper: (formData: FormData) => ({
+ *     avatar: formData.get('avatar'),
+ *     altText: formData.get('altText') || undefined,
+ *   }),
+ *   handler: async ({ avatar, altText, userId }) => {
+ *     // userId is injected automatically
+ *     const url = await uploadUserAvatar(userId, avatar);
+ *     await db.update(users)
+ *       .set({ avatarUrl: url, avatarAltText: altText })
+ *       .where(eq(users.id, userId));
+ *     return { avatarUrl: url };
+ *   }
+ * });
  * ```
  *
  * @todo Implement actual authentication check (e.g., with next-auth, clerk, etc.)
  */
-export function createAuthenticatedAction<
-  TInput extends z.ZodObject,
-  TOutput,
->(config: {
-  schema: TInput;
-  handler: ActionHandler<z.infer<TInput> & { userId: string }, TOutput>;
-}) {
+export function createAuthenticatedAction<TSchema extends z.ZodObject<any>, TOutput>(config: {
+  schema: TSchema;
+  mapper?: InputMapper<any, any>;
+  handler: ActionHandler<z.infer<TSchema> & { userId: string }, TOutput>;
+}): (rawInput: unknown) => Promise<ActionState<TOutput>> {
   return async (rawInput: unknown): Promise<ActionState<TOutput>> => {
     // TODO: Replace with your actual authentication logic
     // Example with next-auth:
@@ -196,6 +222,7 @@ export function createAuthenticatedAction<
     // Reuse createAction logic with userId injected
     return createAction({
       schema: config.schema,
+      mapper: config.mapper,
       handler: (input) => config.handler({ ...input, userId }),
     })(rawInput);
   };
