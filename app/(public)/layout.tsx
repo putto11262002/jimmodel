@@ -1,4 +1,4 @@
-import { Navbar } from "@/components/navigation/navbar";
+import { Navbar } from "@/app/(public)/_components/navbar";
 import { Sora, Inter } from "next/font/google";
 
 // Fashion-forward fonts for public site
