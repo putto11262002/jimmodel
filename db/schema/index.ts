@@ -56,7 +56,7 @@ export const models = pgTable(
     updatedAt: timestamp("updated_at")
       .notNull()
       .defaultNow()
-      .$onUpdate(() => sql`now()`),
+      .$onUpdate(() => new Date()),
   },
   (table) => ({
     // Indexes for frequently queried columns
