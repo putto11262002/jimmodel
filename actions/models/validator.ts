@@ -2,7 +2,10 @@
  * Model action validators
  *
  * Zod schemas for validating model action inputs.
- * Used at the platform boundary (server actions).
+ * Used at the platform boundary (server actions and API endpoints).
+ *
+ * Note: These validators are now primarily used by the Hono API endpoints
+ * in app/api/[[...route]]/_models.ts
  */
 
 import { models } from "@/db/schema";
@@ -13,7 +16,7 @@ import { GENDERS } from "@/lib/data/genders";
 import { HAIR_COLORS } from "@/lib/data/hair-colors";
 import { IMAGE_TYPES } from "@/lib/data/image-types";
 import { ColumnNames } from "@/lib/utils/drizzle";
-import { paginationSchema, sortOrderSchema, uploadedImageSchema, uuidSchema } from "@/actions/common/validators";
+import { paginationSchema, paginationQuerySchema, sortOrderSchema, uploadedImageSchema, uuidSchema } from "@/actions/common/validators";
 import { z } from "zod";
 
 // Field schemas - validation logic only, no .optional() or .nullable()
@@ -49,6 +52,7 @@ const baseModelSchema = z.object({
   name: nameSchema,
   nickName: nickNameSchema.optional().nullable(),
   gender: genderSchema,
+  category: categorySchema.optional(),
   dateOfBirth: z.coerce.date().optional().nullable(),
   nationality: notionalitySchema.optional().nullable(),
   talents: z.array(z.string()).optional().nullable(),
@@ -67,7 +71,7 @@ const baseModelSchema = z.object({
 
 /**
  * Create model schema
- * Category is computed automatically from dateOfBirth and gender
+ * Category can be provided or will be computed automatically from dateOfBirth and gender
  */
 export const createModelSchema = baseModelSchema;
 
@@ -75,13 +79,13 @@ export type CreateModelInput = z.infer<typeof createModelSchema>;
 
 /**
  * Update model schema
- * All fields are optional, category is recomputed if dateOfBirth or gender changes
+ * All fields are optional, category can be provided or will be recomputed if dateOfBirth or gender changes
  */
 export const updateModelSchema = z.object({
-  id: uuidSchema,
   name: nameSchema.optional(),
   nickName: nickNameSchema.optional().nullable(),
   gender: genderSchema.optional(),
+  category: categorySchema.optional(),
   dateOfBirth: z.coerce.date().optional().nullable(),
   nationality: notionalitySchema.optional().nullable(),
   ethnicity: z.string().max(100).optional().nullable(),
@@ -136,6 +140,19 @@ export const listModelsSchema = paginationSchema.extend({
 });
 
 export type ListModelsInput = z.infer<typeof listModelsSchema>;
+
+/**
+ * List models schema for query parameters (coerces string values)
+ */
+export const listModelsQuerySchema = paginationQuerySchema.extend({
+  search: z.string().optional(),
+  sortBy: modelSortBySchema.optional(),
+  sortOrder: sortOrderSchema.optional(),
+  category: categorySchema.optional(),
+  local: z.coerce.boolean().optional(),
+  inTown: z.coerce.boolean().optional(),
+  published: z.coerce.boolean().optional(),
+});
 
 /**
  * Bulk publish/unpublish models schema

@@ -28,12 +28,13 @@ export type SortOrder = "asc" | "desc";
 
 /**
  * Create model input
- * Category is computed automatically from dateOfBirth and gender
+ * Category can be provided or will be computed automatically from dateOfBirth and gender
  */
 export interface CreateModelInput {
   name: string;
   nickName?: string | null;
   gender: Gender;
+  category?: Category;
   dateOfBirth?: Date | null;
   nationality?: Nationality | null;
   talents?: string[] | null;
@@ -52,13 +53,14 @@ export interface CreateModelInput {
 
 /**
  * Update model input
- * All fields are optional, category is recomputed if dateOfBirth or gender changes
+ * All fields are optional, category can be provided or will be recomputed if dateOfBirth or gender changes
  */
 export interface UpdateModelInput {
   id: string;
   name?: string;
   nickName?: string | null;
   gender?: Gender;
+  category?: Category;
   dateOfBirth?: Date | null;
   nationality?: Nationality | null;
   ethnicity?: string | null;

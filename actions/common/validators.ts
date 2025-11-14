@@ -17,6 +17,14 @@ export const paginationSchema = z.object({
 
 export type PaginationInput = z.infer<typeof paginationSchema>;
 
+/**
+ * Pagination schema for query parameters (coerces strings to numbers)
+ */
+export const paginationQuerySchema = z.object({
+  page: z.coerce.number().min(1).default(1),
+  limit: z.coerce.number().min(1).max(100).default(20),
+});
+
 export const sortOrderSchema = z.enum(["asc", "desc"]).default("asc");
 
 export type SortOrder = z.infer<typeof sortOrderSchema>;

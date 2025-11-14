@@ -41,10 +41,10 @@ import { computeCategory } from "./utils";
 
 /**
  * Create a new model
- * Automatically computes category from dateOfBirth and gender
+ * Uses provided category or computes it from dateOfBirth and gender
  */
 export async function createModel(input: CreateModelInput) {
-  const category = computeCategory(input.dateOfBirth, input.gender);
+  const category = input.category ?? computeCategory(input.dateOfBirth, input.gender);
 
   const [newModel] = await db
     .insert(models)
@@ -59,9 +59,25 @@ export async function createModel(input: CreateModelInput) {
 
 /**
  * Update an existing model
- * Recomputes category if dateOfBirth or gender changes
+ * Uses provided category or recomputes it if dateOfBirth or gender changes
  */
 export async function updateModel(input: UpdateModelInput) {
+  // If category is explicitly provided, use it directly
+  if (input.category !== undefined) {
+    const [updatedModel] = await db
+      .update(models)
+      .set(input)
+      .where(eq(models.id, input.id))
+      .returning();
+
+    if (!updatedModel) {
+      throw new Error("Model not found");
+    }
+
+    return updatedModel;
+  }
+
+  // Otherwise, compute category based on gender/dateOfBirth
   // Fetch current model to get existing gender/dateOfBirth
   const [existingModel] = await db
     .select({
@@ -84,7 +100,7 @@ export async function updateModel(input: UpdateModelInput) {
       ? input.dateOfBirth
       : existingModel.dateOfBirth;
 
-  // Recompute category
+  // Compute category
   const category = computeCategory(finalDateOfBirth, finalGender);
 
   // Update model

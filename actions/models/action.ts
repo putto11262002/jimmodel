@@ -1,6 +1,22 @@
 /**
  * Server actions for model management
  * Thin wrappers around core model service
+ *
+ * @deprecated These server actions have been migrated to Hono API endpoints.
+ * Please use the REST API at /api/models instead.
+ * See: lib/api/models/routes.ts
+ *
+ * Migration path:
+ * - createModel() → POST /api/models
+ * - updateModel() → PUT /api/models/:id
+ * - getModel() → GET /api/models/:id
+ * - listModels() → GET /api/models
+ * - deleteModel() → DELETE /api/models/:id
+ * - bulkUpdatePublished() → PATCH /api/models/bulk-publish
+ * - uploadProfileImage() → POST /api/models/:id/profile-image
+ * - uploadModelImage() → POST /api/models/:id/images
+ * - deleteModelImage() → DELETE /api/models/images/:id
+ * - reorderModelImages() → PATCH /api/models/:id/images/reorder
  */
 
 "use server";
@@ -74,12 +90,13 @@ export const createModel: ServerAction<
  * Recomputes category if dateOfBirth or gender changes
  */
 export const updateModel: ServerAction<
-  UpdateModelInput,
+  UpdateModelInput & { id: string },
   Awaited<ReturnType<typeof modelService.updateModel>>
 > = async (input) => {
   try {
-    // Validate with Zod schema
-    const parseResult = updateModelSchema.safeParse(input);
+    // Validate with Zod schema (excluding id from validation)
+    const { id, ...data } = input;
+    const parseResult = updateModelSchema.safeParse(data);
 
     if (!parseResult.success) {
       const fieldErrors = parseResult.error.flatten().fieldErrors;
@@ -97,7 +114,7 @@ export const updateModel: ServerAction<
     // }
 
     // Execute service
-    const result = await modelService.updateModel(parseResult.data);
+    const result = await modelService.updateModel({ id, ...parseResult.data });
     return success(result);
   } catch (err) {
     const message =
