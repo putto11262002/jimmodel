@@ -1,62 +1,14 @@
 "use client";
 
+import type { Model, ModelImage } from "@/db/schema";
 import { motion } from "framer-motion";
 import { useEffect, useRef } from "react";
 
-const FEATURED_MODELS = [
-  {
-    id: 1,
-    name: "Sarah Anderson",
-    category: "Runway & Editorial",
-  },
-  {
-    id: 2,
-    name: "Marcus Chen",
-    category: "Commercial & Fashion",
-  },
-  {
-    id: 3,
-    name: "Elena Rossi",
-    category: "High Fashion",
-  },
-  {
-    id: 4,
-    name: "Alex Thompson",
-    category: "Commercial & Lifestyle",
-  },
-  {
-    id: 5,
-    name: "Victoria Park",
-    category: "Fashion & Editorials",
-  },
-  {
-    id: 6,
-    name: "James Wright",
-    category: "Commercial & Lifestyle",
-  },
-  {
-    id: 7,
-    name: "Sophie Laurent",
-    category: "High Fashion",
-  },
-  {
-    id: 8,
-    name: "David Kim",
-    category: "Commercial & Runway",
-  },
-  {
-    id: 9,
-    name: "Isabella Martinez",
-    category: "Fashion & Editorial",
-  },
-  {
-    id: 10,
-    name: "Ryan O'Connor",
-    category: "Commercial & Lifestyle",
-  },
-];
+interface FeaturedModelsProps {
+  models: (Model & { images: ModelImage[] })[];
+}
 
-export function FeaturedModels() {
+export function FeaturedModels({ models }: FeaturedModelsProps) {
   const topRowRef = useRef<HTMLDivElement>(null);
   const bottomRowRef = useRef<HTMLDivElement>(null);
 
@@ -144,48 +96,70 @@ export function FeaturedModels() {
     };
   }, []);
 
-  // Create three copies of the model list for seamless infinite scroll
-  const modelCards = (copyIndex: number, rowIndex: number) =>
-    FEATURED_MODELS.map((model) => (
-      <motion.div
-        key={`${model.id}-${copyIndex}-row${rowIndex}`}
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: rowIndex * 0.1 }}
-        viewport={{ once: true }}
-        className="group relative inline-block w-48 flex-shrink-0"
-      >
-        {/* Card Container - Narrower width */}
-        <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-muted to-muted/80 aspect-[3/4] transition-transform duration-300 group-hover:scale-105">
-          {/* Model Image */}
-          <img
-            src={`https://i.pravatar.cc/400?img=${model.id + 10}`}
-            alt={model.name}
-            className="absolute inset-0 w-full h-full object-cover"
-          />
+  // Don't render if no models
+  if (!models || models.length === 0) {
+    return null;
+  }
 
-          {/* Hover Overlay */}
-          <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-300" />
+  // Split models into two rows
+  const midpoint = Math.ceil(models.length / 2);
+  const topRowModels = models.slice(0, midpoint);
+  const bottomRowModels = models.slice(midpoint);
 
-          {/* Text Overlay - Enhanced gradient */}
-          <div className="absolute inset-0 flex flex-col justify-end p-4 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <h3 className="font-heading text-white font-bold text-base whitespace-normal">
-              {model.name}
-            </h3>
-            <p className="text-white/80 text-xs whitespace-normal">
-              {model.category}
-            </p>
+  // Create model cards for a specific row
+  const createModelCards = (modelList: typeof models, copyIndex: number, rowIndex: number) =>
+    modelList.map((model) => {
+      // Get profile image or first portfolio image as fallback
+      const imageUrl = model.profileImageURL || model.images[0]?.url;
+      const displayName = model.nickName || model.name;
+
+      return (
+        <motion.div
+          key={`${model.id}-${copyIndex}-row${rowIndex}`}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: rowIndex * 0.1 }}
+          viewport={{ once: true }}
+          className="group relative inline-block w-48 flex-shrink-0"
+        >
+          {/* Card Container - Narrower width */}
+          <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-muted to-muted/80 aspect-[3/4] transition-transform duration-300 group-hover:scale-105">
+            {/* Model Image */}
+            {imageUrl ? (
+              <img
+                src={imageUrl}
+                alt={displayName}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center text-muted-foreground text-sm">
+                No Image
+              </div>
+            )}
+
+            {/* Hover Overlay */}
+            <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-300" />
+
+            {/* Text Overlay - Enhanced gradient */}
+            <div className="absolute inset-0 flex flex-col justify-end p-4 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <h3 className="font-heading text-white font-bold text-base whitespace-normal">
+                {displayName}
+              </h3>
+              <p className="text-white/80 text-xs whitespace-normal capitalize">
+                {model.category}
+              </p>
+            </div>
+
+            {/* Always Visible Name (Mobile Friendly) - Enhanced gradient */}
+            <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/70 via-black/20 to-transparent sm:opacity-0 sm:group-hover:opacity-0">
+              <p className="font-heading text-white font-semibold text-sm whitespace-normal">
+                {displayName}
+              </p>
+            </div>
           </div>
-
-          {/* Always Visible Name (Mobile Friendly) - Enhanced gradient */}
-          <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/70 via-black/20 to-transparent sm:opacity-0 sm:group-hover:opacity-0">
-            <p className="font-heading text-white font-semibold text-sm whitespace-normal">
-              {model.name}
-            </p>
-          </div>
-        </div>
-      </motion.div>
-    ));
+        </motion.div>
+      );
+    });
 
   return (
     <section className="relative w-full py-20 sm:py-28 bg-background overflow-hidden">
@@ -213,9 +187,9 @@ export function FeaturedModels() {
             className="inline-flex gap-4 px-6 will-change-transform"
           >
             {/* Render three copies for seamless infinite scroll */}
-            <div className="inline-flex gap-4">{modelCards(0, 0)}</div>
-            <div className="inline-flex gap-4">{modelCards(1, 0)}</div>
-            <div className="inline-flex gap-4">{modelCards(2, 0)}</div>
+            <div className="inline-flex gap-4">{createModelCards(topRowModels, 0, 0)}</div>
+            <div className="inline-flex gap-4">{createModelCards(topRowModels, 1, 0)}</div>
+            <div className="inline-flex gap-4">{createModelCards(topRowModels, 2, 0)}</div>
           </div>
         </div>
 
@@ -227,9 +201,9 @@ export function FeaturedModels() {
               className="inline-flex gap-4 px-6 will-change-transform"
             >
               {/* Render three copies for seamless infinite scroll */}
-              <div className="inline-flex gap-4">{modelCards(0, 1)}</div>
-              <div className="inline-flex gap-4">{modelCards(1, 1)}</div>
-              <div className="inline-flex gap-4">{modelCards(2, 1)}</div>
+              <div className="inline-flex gap-4">{createModelCards(bottomRowModels, 0, 1)}</div>
+              <div className="inline-flex gap-4">{createModelCards(bottomRowModels, 1, 1)}</div>
+              <div className="inline-flex gap-4">{createModelCards(bottomRowModels, 2, 1)}</div>
             </div>
           </div>
         </div>

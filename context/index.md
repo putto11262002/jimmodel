@@ -12,6 +12,8 @@ This directory contains context documentation that provides patterns and convent
 
 - [Component Organization Pattern](./component-organization.md): Defines component file naming conventions and placement strategy across the codebase.
 
+- [Component Spacing Architecture](./component-spacing-architecture.md): Convention for managing spacing, padding, and layout control between components and their parent containers.
+
 - [Dialog Definition Pattern](./dialog-definition-pattern.md): Workflow for defining and creating dialogs with context-based state management.
 
 - [Hono RPC API Development](./hono-rpc-api-development.md): Conventions for building type-safe APIs with Hono RPC pattern, including validators, routes, and error handling.
