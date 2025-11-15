@@ -4,8 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { submitContactFormSchema, type SubmitContactFormInput, contactSubjects } from "@/actions/contact/validator";
-import { submitContactForm } from "@/actions/contact/action";
+import { submitContactFormSchema, type SubmitContactFormInput, contactSubjects } from "@/actions/form-submissions/validator";
+import { submitContactForm } from "@/actions/form-submissions/action";
 import { Button } from "@/components/ui/button";
 import {
   Form,

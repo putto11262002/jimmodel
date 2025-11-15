@@ -1,12 +1,24 @@
 /**
  * Form submissions service input types
- * Platform-independent TypeScript types for admin form submission operations
+ * Platform-independent TypeScript types for form submission operations
+ * Includes both public contact form submission and admin management operations
  */
 
 /**
  * Form submission status
  */
 export type FormSubmissionStatus = "new" | "read" | "responded";
+
+/**
+ * Submit contact form input (public)
+ */
+export interface SubmitContactFormInput {
+  name: string;
+  email: string;
+  phone?: string | null;
+  subject: string;
+  message: string;
+}
 
 /**
  * List form submissions input with pagination, sorting, and filters

@@ -6,7 +6,7 @@
 "use server";
 
 import { submitContactFormSchema, type SubmitContactFormInput } from "./validator";
-import * as contactService from "@/lib/core/contact/service";
+import * as formSubmissionsService from "@/lib/core/form-submissions/service";
 import { ActionErrorCode, error } from "@/actions";
 import { success } from "@/actions/common/utils";
 import type { ServerAction } from "@/actions/common/types";
@@ -18,7 +18,7 @@ import type { ServerAction } from "@/actions/common/types";
  */
 export const submitContactForm: ServerAction<
   SubmitContactFormInput,
-  Awaited<ReturnType<typeof contactService.submitContactForm>>
+  Awaited<ReturnType<typeof formSubmissionsService.submitContactForm>>
 > = async (input) => {
   try {
     // Validate with Zod schema
@@ -34,7 +34,7 @@ export const submitContactForm: ServerAction<
     }
 
     // Execute service (no authentication required for public contact form)
-    const result = await contactService.submitContactForm(parseResult.data);
+    const result = await formSubmissionsService.submitContactForm(parseResult.data);
     return success(result);
   } catch (err) {
     const message =

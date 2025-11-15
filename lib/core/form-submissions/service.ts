@@ -1,7 +1,7 @@
 /**
  * Core form submissions service
- * Platform-independent business logic for admin form submission operations
- * Handles database operations for viewing, filtering, and managing submissions
+ * Platform-independent business logic for form submission operations
+ * Includes both public contact form submission and admin management operations
  */
 
 import { db } from "@/db";
@@ -13,8 +13,29 @@ import type {
   DeleteFormSubmissionInput,
   GetFormSubmissionInput,
   ListFormSubmissionsInput,
+  SubmitContactFormInput,
   UpdateFormSubmissionStatusInput,
 } from "./types";
+
+/**
+ * Submit a contact form (public)
+ * Creates a new form submission record with status "new"
+ */
+export async function submitContactForm(input: SubmitContactFormInput) {
+  const [submission] = await db
+    .insert(formSubmissions)
+    .values({
+      name: input.name,
+      email: input.email,
+      phone: input.phone,
+      subject: input.subject,
+      message: input.message,
+      status: "new",
+    })
+    .returning();
+
+  return submission;
+}
 
 /**
  * List form submissions with pagination, filtering, and search
