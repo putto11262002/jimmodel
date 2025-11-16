@@ -19,7 +19,7 @@ import { Pagination } from "./_components/pagination";
 interface PageProps {
   params: Promise<{
     category: string;
-    page: string;
+    page?: string[];
   }>;
 }
 
@@ -27,7 +27,7 @@ interface PageProps {
 export async function generateStaticParams() {
   return CATEGORIES.map((category) => ({
     category,
-    page: "1",
+    page: ["1"],
   }));
 }
 
@@ -58,8 +58,9 @@ export default async function ModelListingPage({ params }: PageProps) {
     notFound();
   }
 
-  // Parse page number
-  const page = parseInt(pageParam, 10);
+  // Parse page number - use first item in array, default to "1" if undefined
+  const pageString = pageParam?.[0] ?? "1";
+  const page = parseInt(pageString, 10);
   const limit = 12; // 12 models per page
 
   // Validate page number
