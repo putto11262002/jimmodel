@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { PageHeader } from "../../_components/page-header";
 import { useCreateModelDialog } from "./_components/create-model-dialog";
+import { CacheActionsDropdown } from "./_components/cache-actions-dropdown";
 
 export default function ModelsHeader() {
   const { setOpen } = useCreateModelDialog();
@@ -13,10 +14,12 @@ export default function ModelsHeader() {
       title="Models Management"
       description="View, create, and manage model profiles"
       actions={
-        <Button onClick={() => setOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Create Model
-        </Button>
+        <div className="flex items-center gap-2">
+          <CacheActionsDropdown />
+          <Button onClick={() => setOpen(true)} size="icon" aria-label="Create Model">
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
       }
     />
   );

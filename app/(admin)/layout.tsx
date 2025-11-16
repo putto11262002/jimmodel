@@ -13,7 +13,7 @@ export default function AdminLayout({
         <AdminSidebar />
       </Suspense>
       <div className="flex-1 flex flex-col bg-background">{children}</div>
-      <Toaster position="top-right" richColors />
+      <Toaster position="top-right" />
     </div>
   );
 }

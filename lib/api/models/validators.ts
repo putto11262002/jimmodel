@@ -228,3 +228,12 @@ export const reorderModelImagesSchema = z.object({
 });
 
 export type ReorderModelImagesInput = z.infer<typeof reorderModelImagesSchema>;
+
+/**
+ * Bulk revalidate model profiles schema
+ */
+export const bulkRevalidateSchema = z.object({
+  ids: z.array(uuidSchema).min(1, "At least one model ID is required"),
+});
+
+export type BulkRevalidateInput = z.infer<typeof bulkRevalidateSchema>;
