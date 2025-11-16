@@ -15,6 +15,13 @@
       "when": 1762267603069,
       "tag": "0001_ambitious_bucky",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1763175278164,
+      "tag": "0002_hesitant_paibok",
+      "breakpoints": true
     }
   ]
 }

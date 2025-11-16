@@ -7,6 +7,7 @@ import {
   ChevronRight,
   LayoutDashboard,
   Users,
+  FileText,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -22,6 +23,11 @@ const navigation = [
     name: "Models",
     href: "/admin/models",
     icon: Users,
+  },
+  {
+    name: "Form Submissions",
+    href: "/admin/form-submissions",
+    icon: FileText,
   },
 ];
 
