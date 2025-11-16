@@ -95,6 +95,11 @@ Links to related context files or documentation
 - **Quick Reference** - Tables summarizing key information
 - **Migration Checklist** - Steps for refactoring to the pattern
 - **Integration with...** - How pattern connects to other layers
+- **Implications** - When describing approaches (file-level vs component-level), list ALL implications:
+  - What gets affected/cached/included
+  - How it impacts imports/dependencies
+  - Constraints it imposes
+  - Side effects on nested components
 
 ## Patterns vs Technology Teaching
 
@@ -267,6 +272,43 @@ queryFn: async () => {
 - No "It's important to note that..."
 - No "You might want to consider..."
 
+### Framework Terminology Precision
+
+Use exact framework terminology when documenting scope levels, API names, or technical concepts.
+
+**Example - Next.js Caching:**
+- **File-level** `'use cache'` - Directive at top of file
+- **Component-level** `'use cache'` - Inside component function
+- **Function-level** `'use cache'` - Inside utility function
+
+Don't use imprecise terms like "function-level" when the framework calls it "component-level."
+
+**Why:** Frameworks often have specific meanings for terms. Using wrong terminology creates confusion and makes it harder to search official docs.
+
+**How to ensure precision:**
+1. Use exact terms from official documentation
+2. Define each term clearly if there are similar concepts
+3. Show when to use each variant
+4. Provide examples distinguishing each level/type
+
+### No Emojis Policy
+
+**Never use emojis** unless explicitly requested by the user, including:
+- Unicode symbols: ✅ ❌ ✓ ✗ ⚠️ 🚀
+- Checkmarks and X marks
+- Visual decorations
+
+**Instead use:**
+- Text: "Yes/No", "DO/DON'T", "Warning", "Note"
+- Structured headings: "When to use" vs "When NOT to use"
+- Plain bullet points without symbols
+
+**Applies to:**
+- All prose content
+- Code comments
+- Tables and lists
+- Examples and guidelines
+
 ### Code Examples
 
 **Minimal, focused snippets:**
@@ -300,6 +342,46 @@ interface UseModelsOptions {
 See implementation: `hooks/queries/models/use-models.ts`
 ```
 
+### Avoid Cross-Pattern Pollution
+
+Code examples should focus ONLY on the pattern being documented. Avoid showing implementation details from other system layers:
+
+**Example - Caching Context File:**
+
+```typescript
+// Good: Shows only cache-relevant code
+export default async function Page() {
+  "use cache";
+  cacheLife(config.profile);
+  cacheTag(config.tag);
+
+  const data = await getData();
+  return <div>{data.title}</div>;
+}
+```
+
+```typescript
+// Bad: Shows validation, database queries, error handling
+export default async function Page() {
+  "use cache";
+  cacheLife(config.profile);
+
+  const validated = validateInput(schema, input); // Don't show validation details
+  const data = await db.query.select()... // Don't show DB query patterns
+  if (!data) throw new Error(); // Don't show error handling
+
+  return (
+    <div className="flex gap-4"> {/* Don't show UI patterns */}
+      {data.title}
+    </div>
+  );
+}
+```
+
+**Why:** Including other patterns gives false impressions about how those systems work. Each pattern should be documented in its own context file.
+
+**When in doubt:** Show ONLY the specific API calls, directives, and patterns being documented. Replace everything else with comments or simplified placeholders.
+
 ### Formatting
 
 **Use consistent formatting:**
@@ -324,6 +406,34 @@ hooks/
 - `.pick()`, `.extend()`
 
 **Examples:** Labeled code blocks with `// Good` or `// Usage` comments
+
+### Reference Links
+
+Always include markdown reference links to official documentation at the **end of each major section**.
+
+**Pattern:**
+```markdown
+## Section Title
+
+[Section content...]
+
+**Reference:** [API documentation](https://official-docs.com/api)
+```
+
+**For sections covering multiple APIs:**
+```markdown
+**References:** [API 1 documentation](https://...) | [API 2 documentation](https://...)
+```
+
+**Placement:**
+- After all section content
+- Before the next section heading
+- Use `**Reference:**` or `**References:**` as the label
+
+**Don't:**
+- Use inline "Official docs: URL" format
+- Place links mid-section
+- Skip reference links (every major section should have them)
 
 ## Common Workflows Section
 
@@ -396,6 +506,37 @@ Provide clear DO/DON'T lists.
 2. **Don't forget invalidation** - Mutations must invalidate related queries
 ```
 
+### "When to Use" vs "When NOT to Use"
+
+For APIs or patterns with alternatives, document both sides of the decision:
+
+**Pattern:**
+```markdown
+**When to use:**
+- Scenario requiring this approach
+- Specific need this addresses
+- Context where this is optimal
+
+**When NOT to use:**
+- Alternative is better
+- Constraint makes this unsuitable
+- Performance/consistency tradeoff
+```
+
+**Why:** Helps developers make informed decisions by understanding both when an approach fits AND when to choose alternatives.
+
+**Example:**
+```markdown
+**When to use:**
+- User must see changes immediately
+- Data consistency critical
+- Mutation redirects to page showing modified data
+
+**When NOT to use:**
+- Performance more critical than immediate consistency
+- Background refresh acceptable
+```
+
 ## Examples Section
 
 Show real code examples that demonstrate the pattern.
@@ -447,6 +588,32 @@ Question?
 - Use indentation consistently
 - Keep depth manageable (3-4 levels max)
 
+### Contextual Considerations in Decision Trees
+
+Decision trees shouldn't just be binary yes/no. Include contextual factors to consider:
+
+**Pattern:**
+```
+Question?
+│    (Consider: factor 1, factor 2, factor 3)
+│
+├─ YES → Action
+│
+└─ NO → Different action
+```
+
+**Example:**
+```
+Should this data be cached?
+│    (Consider: data volatility, user-specific needs, freshness requirements)
+│
+├─ YES, cache this data → Use 'use cache'
+│
+└─ NO, needs per-request → Use Suspense
+```
+
+**Why:** Provides guidance on what factors to evaluate, not just the final decision.
+
 ## Tables
 
 Use tables for quick reference and comparisons.
@@ -478,13 +645,16 @@ Always include YAML front matter:
 ```markdown
 ---
 title: "Human-Readable Pattern Name"
-description: "One-line summary under 100 characters"
+description: "Comprehensive summary listing all major topics covered"
 ---
 ```
 
 **Guidelines:**
 - Title uses title case
-- Description is concise and actionable
+- Description acts as a **trigger condition** - readers use it to decide if they should read the file
+- List ALL major topics, APIs, patterns, and concepts covered (may exceed 100 characters for comprehensiveness)
+- Include specific API names, strategies, and implementation approaches
+- Example: "Server-side rendering and caching patterns using Next.js 16 'use cache' directive, cacheLife profiles, cache tagging, revalidation strategies (updateTag vs revalidateTag), centralized cache configuration, PPR implementation, ISR patterns, and migration from route segment config."
 - No additional metadata needed
 
 ## Maintenance
@@ -523,6 +693,14 @@ Before finalizing a context file:
 9. Are DO/DON'T lists specific and practical?
 10. Is front matter included?
 11. Is it added to `context/index.md`?
+12. Are reference links included at the end of each major section?
+13. Does the description list ALL major topics comprehensively?
+14. Are framework-specific terms used precisely and correctly?
+15. Do code examples avoid showing patterns from other system layers?
+16. Are advanced patterns and edge cases documented (not just basics)?
+17. Are all emojis and Unicode symbols removed?
+18. Do decision trees include contextual considerations (not just yes/no)?
+19. For APIs with alternatives, is "When to Use" vs "When NOT to Use" documented?
 
 ## File Template
 
