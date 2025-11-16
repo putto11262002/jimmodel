@@ -10,6 +10,8 @@ This directory contains context documentation that provides patterns and convent
 
 - [API Organization](./api-organization.md): Pattern for organizing API routes using Hono with feature-based modular structure.
 
+- [Next.js Cache Components](./nextjs-caching.md): Server-side rendering and caching patterns using Next.js 16 'use cache' directive, cacheLife profiles, cache tagging, revalidation strategies (updateTag vs revalidateTag), centralized cache configuration, PPR implementation, ISR patterns, and migration from route segment config. Covers file-level, component-level, and function-level caching with interleaving patterns for dynamic content.
+
 - [Component Organization Pattern](./component-organization.md): Defines component file naming conventions and placement strategy across the codebase.
 
 - [Component Spacing Architecture](./component-spacing-architecture.md): Convention for managing spacing, padding, and layout control between components and their parent containers.

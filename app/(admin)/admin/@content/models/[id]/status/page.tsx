@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, RefreshCw } from "lucide-react";
 import { useModel } from "@/hooks/queries/models/use-model";
+import { useRevalidateModelProfile } from "@/hooks/queries/models/use-revalidate-model-profile";
 import { ModelFormSkeleton } from "../_components/model-form-skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -46,28 +47,64 @@ interface StatusPublicationFormProps {
 }
 
 function StatusPublicationForm({ initialData }: StatusPublicationFormProps) {
-  const router = useRouter();
   const updateModel = useUpdateModel();
+  const revalidateProfile = useRevalidateModelProfile();
 
-  const form = useForm<UpdateModelInput>({
+  // Publication settings form
+  const publicationForm = useForm<UpdateModelInput>({
     resolver: zodResolver(updateModelSchema),
     defaultValues: {
       category: initialData.category ?? undefined,
-      local: initialData.local ?? false,
-      inTown: initialData.inTown ?? false,
       published: initialData.published ?? false,
     },
   });
 
-  // Watch the local field to conditionally enable/disable inTown
-  const isLocal = form.watch("local");
+  // Availability settings form
+  const availabilityForm = useForm<UpdateModelInput>({
+    resolver: zodResolver(updateModelSchema),
+    defaultValues: {
+      local: initialData.local ?? false,
+      inTown: initialData.inTown ?? false,
+    },
+  });
 
-  const onSubmit = async (data: UpdateModelInput) => {
+  // Watch the local field to conditionally enable/disable inTown
+  const isLocal = availabilityForm.watch("local");
+
+  const onSubmitPublication = async (data: UpdateModelInput) => {
     updateModel.mutate(
       { id: initialData.id, data },
       {
         onSuccess: () => {
-          toast.success("Status and publication settings updated successfully");
+          toast.success("Publication settings updated successfully");
+        },
+        onError: (error) => {
+          toast.error(error.message);
+        },
+      }
+    );
+  };
+
+  const onSubmitAvailability = async (data: UpdateModelInput) => {
+    updateModel.mutate(
+      { id: initialData.id, data },
+      {
+        onSuccess: () => {
+          toast.success("Availability settings updated successfully");
+        },
+        onError: (error) => {
+          toast.error(error.message);
+        },
+      }
+    );
+  };
+
+  const handleRevalidate = () => {
+    revalidateProfile.mutate(
+      { id: initialData.id },
+      {
+        onSuccess: () => {
+          toast.success("Model profile cache revalidated");
         },
         onError: (error) => {
           toast.error(error.message);
@@ -77,47 +114,93 @@ function StatusPublicationForm({ initialData }: StatusPublicationFormProps) {
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Status & Publication</CardTitle>
-            <CardDescription>Manage the model&apos;s availability and visibility settings.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Public Display Category</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value ?? undefined}
-                  >
+    <div className="space-y-6">
+      {/* Publication Settings Card */}
+      <Form {...publicationForm}>
+        <form onSubmit={publicationForm.handleSubmit(onSubmitPublication)}>
+          <Card>
+            <CardHeader>
+              <CardTitle>Publication Settings</CardTitle>
+              <CardDescription>
+                Control the model&apos;s visibility and public display category.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <FormField
+                control={publicationForm.control}
+                name="published"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                     <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Auto-computed (or select to override)" />
-                      </SelectTrigger>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
                     </FormControl>
-                    <SelectContent>
-                      {CATEGORIES.map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {category.charAt(0).toUpperCase() + category.slice(1)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    Leave empty to auto-compute based on age and gender. Override to set a custom category for public site display.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Published</FormLabel>
+                      <FormDescription>
+                        Publish this model to make it visible publicly
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-                control={form.control}
+              <FormField
+                control={publicationForm.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Public Display Category</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value ?? undefined}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Auto-computed (or select to override)" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {CATEGORIES.map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category.charAt(0).toUpperCase() + category.slice(1)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Leave empty to auto-compute based on age and gender. Override to set a custom category for public site display.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+            <CardFooter className="flex justify-end">
+              <Button type="submit" disabled={updateModel.isPending}>
+                {updateModel.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Save Publication Settings
+              </Button>
+            </CardFooter>
+          </Card>
+        </form>
+      </Form>
+
+      {/* Availability Settings Card */}
+      <Form {...availabilityForm}>
+        <form onSubmit={availabilityForm.handleSubmit(onSubmitAvailability)}>
+          <Card>
+            <CardHeader>
+              <CardTitle>Availability Settings</CardTitle>
+              <CardDescription>
+                Set the model&apos;s location and availability status.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <FormField
+                control={availabilityForm.control}
                 name="local"
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
@@ -128,7 +211,7 @@ function StatusPublicationForm({ initialData }: StatusPublicationFormProps) {
                           field.onChange(checked);
                           // Reset inTown to false when local is true
                           if (checked) {
-                            form.setValue("inTown", false);
+                            availabilityForm.setValue("inTown", false);
                           }
                         }}
                       />
@@ -143,9 +226,9 @@ function StatusPublicationForm({ initialData }: StatusPublicationFormProps) {
                 )}
               />
 
-{!isLocal && (
+              {!isLocal && (
                 <FormField
-                  control={form.control}
+                  control={availabilityForm.control}
                   name="inTown"
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
@@ -165,45 +248,58 @@ function StatusPublicationForm({ initialData }: StatusPublicationFormProps) {
                   )}
                 />
               )}
+            </CardContent>
+            <CardFooter className="flex justify-end">
+              <Button type="submit" disabled={updateModel.isPending}>
+                {updateModel.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Save Availability Settings
+              </Button>
+            </CardFooter>
+          </Card>
+        </form>
+      </Form>
 
-              <FormField
-                control={form.control}
-                name="published"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Published</FormLabel>
-                      <FormDescription>
-                        Publish this model to make it visible publicly
-                      </FormDescription>
-                    </div>
-                  </FormItem>
-                )}
-              />
-          </CardContent>
-          <CardFooter className="flex justify-end gap-4">
+      {/* Cache Management Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Cache Management</CardTitle>
+          <CardDescription>
+            Manage the public site cache for this model&apos;s profile page.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center space-x-4 rounded-md border p-4">
+            <RefreshCw className="h-5 w-5 text-muted-foreground" />
+            <div className="flex-1 space-y-1">
+              <p className="text-sm font-medium leading-none">
+                Revalidate Public Profile Cache
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Trigger a background cache revalidation for this model&apos;s public profile page. Use this after making changes to ensure visitors see the latest content.
+              </p>
+            </div>
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.push("/admin/models")}
-              disabled={updateModel.isPending}
+              onClick={handleRevalidate}
+              disabled={revalidateProfile.isPending}
             >
-              Cancel
+              {revalidateProfile.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Revalidating...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Revalidate
+                </>
+              )}
             </Button>
-            <Button type="submit" disabled={updateModel.isPending}>
-              {updateModel.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Save Changes
-            </Button>
-          </CardFooter>
-        </Card>
-      </form>
-    </Form>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 

@@ -8,7 +8,9 @@
 import * as modelService from "@/lib/core/models/service";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
+import { revalidateTag } from "next/cache";
 import { z } from "zod";
+import { cacheComponentConfig } from "@/config/cache-component";
 import {
   bulkUpdatePublishedSchema,
   createModelSchema,
@@ -17,6 +19,7 @@ import {
   updateModelSchema,
   uploadModelImageSchema,
   uploadProfileImageSchema,
+  bulkRevalidateSchema,
 } from "./validators";
 
 export const modelRoutes = new Hono()
@@ -286,6 +289,147 @@ export const modelRoutes = new Hono()
         if (message.includes("do not exist") || message === "Model not found") {
           return c.json({ error: message }, 404);
         }
+        return c.json({ error: message }, 500);
+      }
+    },
+  )
+  /**
+   * PATCH /api/models/revalidate/listing
+   * Revalidate model listing cache (["models"] tag)
+   */
+  .patch("/revalidate/listing", async (c) => {
+    try {
+      // TODO: Check authentication
+      // const session = await getServerSession(authOptions);
+      // if (!session?.user?.id) {
+      //   return c.json({ error: 'Unauthorized' }, 401);
+      // }
+
+      // Revalidate listing tag
+      revalidateTag("models", "max");
+
+      return c.json({ message: "Model listing cache revalidated" }, 200);
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Failed to revalidate listing cache";
+      return c.json({ error: message }, 500);
+    }
+  })
+  /**
+   * PATCH /api/models/revalidate/all-profiles
+   * Revalidate all model profile caches (["model"] tag)
+   */
+  .patch("/revalidate/all-profiles", async (c) => {
+    try {
+      // TODO: Check authentication
+      // const session = await getServerSession(authOptions);
+      // if (!session?.user?.id) {
+      //   return c.json({ error: 'Unauthorized' }, 401);
+      // }
+
+      // Revalidate all model profiles by invalidating the generic "model" tag
+      revalidateTag("model", "max");
+
+      return c.json(
+        { message: "All model profile caches revalidated" },
+        200,
+      );
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Failed to revalidate profile caches";
+      return c.json({ error: message }, 500);
+    }
+  })
+  /**
+   * PATCH /api/models/revalidate/all
+   * Revalidate both listing and all profile caches
+   */
+  .patch("/revalidate/all", async (c) => {
+    try {
+      // TODO: Check authentication
+      // const session = await getServerSession(authOptions);
+      // if (!session?.user?.id) {
+      //   return c.json({ error: 'Unauthorized' }, 401);
+      // }
+
+      // Revalidate both listing and all profiles
+      revalidateTag("models", "max");
+      revalidateTag("model", "max");
+
+      return c.json({ message: "All model caches revalidated" }, 200);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to revalidate caches";
+      return c.json({ error: message }, 500);
+    }
+  })
+  /**
+   * PATCH /api/models/:id/revalidate
+   * Revalidate specific model profile cache (["model", id] tags)
+   */
+  .patch(
+    "/:id/revalidate",
+    zValidator("param", z.object({ id: z.string().uuid() })),
+    async (c) => {
+      try {
+        // TODO: Check authentication
+        // const session = await getServerSession(authOptions);
+        // if (!session?.user?.id) {
+        //   return c.json({ error: 'Unauthorized' }, 401);
+        // }
+
+        const { id } = c.req.valid("param");
+
+        // Revalidate specific model profile by ID only
+        // Note: Don't revalidate generic "model" tag - that would invalidate ALL profiles
+        revalidateTag(id, "max");
+
+        return c.json({ message: "Model profile cache revalidated" }, 200);
+      } catch (err) {
+        const message =
+          err instanceof Error
+            ? err.message
+            : "Failed to revalidate profile cache";
+        return c.json({ error: message }, 500);
+      }
+    },
+  )
+  /**
+   * PATCH /api/models/revalidate/bulk
+   * Revalidate multiple model profile caches
+   */
+  .patch(
+    "/revalidate/bulk",
+    zValidator("json", bulkRevalidateSchema),
+    async (c) => {
+      try {
+        // TODO: Check authentication
+        // const session = await getServerSession(authOptions);
+        // if (!session?.user?.id) {
+        //   return c.json({ error: 'Unauthorized' }, 401);
+        // }
+
+        const { ids } = c.req.valid("json");
+
+        // Revalidate each specific model ID only
+        // Note: Don't revalidate generic "model" tag - that would invalidate ALL profiles
+        ids.forEach((id) => {
+          revalidateTag(id, "max");
+        });
+
+        return c.json(
+          { message: `${ids.length} model profile cache(s) revalidated` },
+          200,
+        );
+      } catch (err) {
+        const message =
+          err instanceof Error
+            ? err.message
+            : "Failed to revalidate profile caches";
         return c.json({ error: message }, 500);
       }
     },

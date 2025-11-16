@@ -1,4 +1,5 @@
-import { getModel, listModels } from "@/lib/core/models/service";
+import { cacheComponentConfig } from "@/config/cache-component";
+import { getModel } from "@/lib/core/models/service";
 import type { Metadata } from "next";
 import { cacheLife, cacheTag } from "next/cache";
 import { ModelProfileSection } from "./_components/model-profile-section";
@@ -11,42 +12,16 @@ interface PageProps {
   }>;
 }
 
-// Generate static params for existing models
-export async function generateStaticParams() {
-  const params = await getModelsIds();
-  return params;
-}
-
-async function getModelsIds() {
-  let more = true;
-  let page = 1;
-  const limit = 12;
-  const modelsIds: { id: string }[] = [];
-  while (more) {
-    const result = await listModels({
-      published: true,
-      page,
-      limit,
-      sortBy: "createdAt",
-      sortOrder: "desc",
-    });
-    more = page * limit < result.totalCount;
-    page++;
-    result.items.forEach((model) => {
-      modelsIds.push({ id: model.id });
-    });
-  }
-  return modelsIds;
-}
-
 // Dynamic metadata
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
-  "use cache";
+  "use cache"; // define cache derieective here because need id for tag
   const { id } = await params;
+  cacheLife(cacheComponentConfig.modelListing.profile);
+  cacheTag(...cacheComponentConfig.modelProfile.tag(id));
 
   try {
     const model = await getModel({ id });
@@ -68,10 +43,10 @@ export async function generateMetadata({
 }
 
 export default async function ModelProfilePage({ params }: PageProps) {
-  "use cache";
+  "use cache"; // define cache derieective here because need id for tag
   const { id } = await params;
-  cacheLife("weeks");
-  cacheTag("models", "profile", id);
+  cacheLife(cacheComponentConfig.modelListing.profile);
+  cacheTag(...cacheComponentConfig.modelProfile.tag(id));
 
   // Fetch published model
   const model = await fetchPublishedModel(id);
