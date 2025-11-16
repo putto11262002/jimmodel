@@ -10,7 +10,6 @@ import {
 import { calculateAge } from "@/lib/core/models/utils";
 import type { getModel } from "@/lib/core/models/service";
 import Image from "next/image";
-import { cn } from "@/lib/utils";
 
 type Model = Awaited<ReturnType<typeof getModel>>;
 

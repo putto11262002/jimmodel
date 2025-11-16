@@ -1,13 +1,11 @@
 import { getModel, listModels } from "@/lib/core/models/service";
 import type { Metadata } from "next";
 import { cacheLife, cacheTag } from "next/cache";
-import type { ReactNode } from "react";
-import { PortfolioNavigation } from "./_components/portfolio-navigation";
+import { ModelProfileSection } from "./_components/model-profile-section";
+import { PortfolioTabs } from "./_components/portfolio-tabs";
+import { fetchPublishedModel } from "./_utils/fetch-model";
 
-interface LayoutProps {
-  children: ReactNode;
-  profile: ReactNode;
-  images: ReactNode;
+interface PageProps {
   params: Promise<{
     id: string;
   }>;
@@ -16,7 +14,6 @@ interface LayoutProps {
 // Generate static params for existing models
 export async function generateStaticParams() {
   const params = await getModelsIds();
-
   return params;
 }
 
@@ -70,49 +67,41 @@ export async function generateMetadata({
   }
 }
 
-export default async function ModelDetailLayout({
-  profile,
-  images,
-  params,
-}: LayoutProps) {
+export default async function ModelProfilePage({ params }: PageProps) {
   "use cache";
   const { id } = await params;
   cacheLife("weeks");
   cacheTag("models", "profile", id);
 
-  // Fetch model to calculate image counts
-  let model;
-  try {
-    model = await getModel({ id });
-  } catch {
-    // If model fetch fails, use zero counts
-    model = null;
-  }
+  // Fetch published model
+  const model = await fetchPublishedModel(id);
 
   // Calculate image counts by type
   const counts = {
-    all: model?.images.length || 0,
-    book: model?.images.filter((img) => img.type === "book").length || 0,
-    polaroid:
-      model?.images.filter((img) => img.type === "polaroid").length || 0,
-    composite:
-      model?.images.filter((img) => img.type === "composite").length || 0,
+    all: model.images.length,
+    book: model.images.filter((img) => img.type === "book").length,
+    polaroid: model.images.filter((img) => img.type === "polaroid").length,
+    composite: model.images.filter((img) => img.type === "composite").length,
   };
 
   return (
     <div>
       {/* Profile Section */}
-      {profile}
+      <div className="container mx-auto px-4 py-6 md:py-8 lg:py-10">
+        <div className="max-w-7xl mx-auto">
+          <ModelProfileSection model={model} variant="full" />
+        </div>
+      </div>
 
-      {/* Portfolio Gallery Section with Navigation */}
+      {/* Portfolio Gallery Section with Tabs */}
       <div className="bg-muted/20 py-6 md:py-8 lg:py-10">
         <div className="container mx-auto px-4">
           <div className="max-w-7xl mx-auto">
-            {/* Navigation for image types */}
-            <PortfolioNavigation modelId={id} counts={counts} />
-
-            {/* Images slot - renders based on route */}
-            <div className="min-h-[400px]">{images}</div>
+            <PortfolioTabs
+              images={model.images}
+              modelName={model.name}
+              counts={counts}
+            />
           </div>
         </div>
       </div>
