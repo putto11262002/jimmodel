@@ -384,8 +384,8 @@ export const modelRoutes = new Hono()
 
         const { id } = c.req.valid("param");
 
-        // Revalidate specific model profile tags
-        revalidateTag("model", "max");
+        // Revalidate specific model profile by ID only
+        // Note: Don't revalidate generic "model" tag - that would invalidate ALL profiles
         revalidateTag(id, "max");
 
         return c.json({ message: "Model profile cache revalidated" }, 200);
@@ -415,10 +415,8 @@ export const modelRoutes = new Hono()
 
         const { ids } = c.req.valid("json");
 
-        // Revalidate the generic "model" tag once
-        revalidateTag("model", "max");
-
-        // Revalidate each specific model ID
+        // Revalidate each specific model ID only
+        // Note: Don't revalidate generic "model" tag - that would invalidate ALL profiles
         ids.forEach((id) => {
           revalidateTag(id, "max");
         });
