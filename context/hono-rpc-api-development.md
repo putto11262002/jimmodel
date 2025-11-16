@@ -184,6 +184,7 @@ export const modelRoutes = new Hono()
 3. **Don't forget type export** - RPC client requires `export type Api = typeof api`
 4. **Don't omit status codes** - Always provide explicit status for type discrimination
 5. **Don't use Hono error helpers** - Use `c.json()` with explicit status codes instead
+6. **Don't use DELETE with JSON bodies** - HTTP clients and proxies have poor support; use POST with descriptive endpoint (e.g., `/bulk-delete`)
 
 ## Response Patterns
 
@@ -224,6 +225,30 @@ catch (err) {
   return c.json({ error: message }, 500);
 }
 ```
+
+### Bulk Delete Pattern (POST Instead of DELETE)
+
+```typescript
+// ✓ Correct: Use POST for bulk operations with JSON body
+export const featureRoutes = new Hono()
+  .post(
+    "/bulk-delete",
+    zValidator("json", z.object({ ids: z.array(z.string().uuid()) })),
+    async (c) => {
+      const { ids } = c.req.valid("json");
+      const result = await featureService.bulkDelete({ ids });
+      return c.json(result, 200);
+    }
+  )
+
+// ✗ Avoid: DELETE with JSON body - problematic with HTTP clients
+export const featureRoutes = new Hono()
+  .delete("/bulk", /* ... */) // Don't do this
+```
+
+**Why:** DELETE requests with JSON bodies can fail with some HTTP clients, proxies, and firewalls. The HTTP spec doesn't explicitly forbid it, but it's unconventional and poorly supported. Use POST with a descriptive endpoint name instead.
+
+**Implementation:** `lib/api/form-submissions/routes.ts:159`
 
 ## RPC Type Inference
 

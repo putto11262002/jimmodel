@@ -1,6 +1,7 @@
 import { Category } from "@/lib/data/categories";
 import { Country } from "@/lib/data/countries";
 import { EyeColor } from "@/lib/data/eye-colors";
+import { FormSubmissionSubject } from "@/lib/data/form-submission-subjects";
 import { Gender } from "@/lib/data/genders";
 import { HairColor } from "@/lib/data/hair-colors";
 import { ImageType } from "@/lib/data/image-types";
@@ -129,6 +130,34 @@ export const modelViews = pgTable(
   }),
 );
 
+// Form Submissions Table
+export const formSubmissions = pgTable(
+  "form_submissions",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    name: varchar("name", { length: 255 }).notNull(),
+    email: varchar("email", { length: 255 }).notNull(),
+    phone: varchar("phone", { length: 50 }),
+    subject: varchar("subject", { length: 255 })
+      .notNull()
+      .$type<FormSubmissionSubject>(),
+    message: text("message").notNull(),
+    status: varchar("status", { length: 20 })
+      .notNull()
+      .default("new")
+      .$type<"new" | "read" | "responded">(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    // Indexes for filtering and sorting
+    statusIdx: index("form_submissions_status_idx").on(table.status),
+    createdAtIdx: index("form_submissions_created_at_idx").on(table.createdAt),
+    emailIdx: index("form_submissions_email_idx").on(table.email),
+  }),
+);
+
 // Export types
 export type Model = typeof models.$inferSelect;
 export type NewModel = typeof models.$inferInsert;
@@ -136,3 +165,5 @@ export type ModelImage = typeof modelImages.$inferSelect;
 export type NewModelImage = typeof modelImages.$inferInsert;
 export type ModelView = typeof modelViews.$inferSelect;
 export type NewModelView = typeof modelViews.$inferInsert;
+export type FormSubmission = typeof formSubmissions.$inferSelect;
+export type NewFormSubmission = typeof formSubmissions.$inferInsert;

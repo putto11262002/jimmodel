@@ -34,4 +34,8 @@ This directory contains context documentation that provides patterns and convent
 
 - [Empty State UI Pattern](./empty-state-pattern.md): Conventions for displaying empty states with icons, messaging, and call-to-action patterns for different contexts (feature pages, tables, cards, search/filter results).
 
+- [Feedback Page Pattern](./feedback-page-pattern.md): UI structure and visual conventions for dedicated feedback pages that display action outcomes (success, error, pending states).
+
+- [Feedback Patterns](./feedback-patterns.md): Decision framework for choosing appropriate feedback mechanisms (feedback pages, toasts, inline validation) based on action type and user context.
+
 - [Writing Context Files](./writing-context-files.md): Guide for creating context files that document conventions, patterns, and structural decisions.
