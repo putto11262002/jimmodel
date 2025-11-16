@@ -288,6 +288,56 @@ export default function Page() {
 
 **Reference:** [use cache directive documentation](https://nextjs.org/docs/app/api-reference/directives/use-cache)
 
+## Understanding How Cache Tag Arrays Work
+
+### Core Concept
+
+Cache entries tagged with an array respond to **any tag in that array**. Invalidating any single tag invalidates the entire cache entry.
+
+**Example:**
+```typescript
+// Cache entry tagged with ["post", "123"]
+cacheTag("post", "123");
+
+// Either tag invalidates the cache entry:
+revalidateTag("post", "max");    // Invalidates ALL posts (including 123)
+revalidateTag("123", "max");     // Invalidates ONLY post 123
+```
+
+### Invalidation Scope
+
+**Generic tag (singular)** - Invalidates ALL items of that type:
+```typescript
+revalidateTag("post", "max");     // ALL posts
+revalidateTag("user", "max");     // ALL users
+revalidateTag("product", "max");  // ALL products
+```
+
+**Specific ID tag** - Invalidates ONLY that item:
+```typescript
+revalidateTag("123", "max");      // ONLY item with id "123"
+revalidateTag("abc-xyz", "max");  // ONLY item with id "abc-xyz"
+```
+
+### Choosing Invalidation Scope
+
+**Single item mutations:**
+- Invalidate only the specific ID tag
+- Don't invalidate generic tag - affects ALL items unnecessarily
+
+**Mutations affecting all items:**
+- Invalidate the generic singular tag
+- Optional: Also invalidate collection tag if lists need updating
+
+**Mutations affecting item and collection:**
+- Invalidate specific ID tag AND collection tag (plural)
+- Example: Publishing affects item profile + public listing
+```typescript
+revalidateTag(id, "max");           // Specific item
+revalidateTag("resources", "max");  // Collection listing
+// Don't invalidate "resource" - affects ALL items
+```
+
 ## Cache Tagging Patterns
 
 ### Purpose
@@ -355,10 +405,11 @@ tag: ["models"]
 tag: (id: string): string[] => ["model", id]
 ```
 
-**Invalidation flexibility:**
-- Invalidate **all models** (collection): `updateTag("models")` or `revalidateTag("models", "max")`
-- Invalidate **specific model** (item): `updateTag("model")` + `updateTag(id)`
-- Semantic distinction via plural (collections) vs singular (items)
+**Invalidation strategies:**
+- **All items** (broad): `revalidateTag("resource", "max")` - affects every item tagged with "resource"
+- **Specific item** (targeted): `revalidateTag(id, "max")` - affects only that id
+- **Collection listing**: `revalidateTag("resources", "max")` - affects list views
+- Semantic distinction: Plural (collections) vs singular (category) vs id (specific items)
 
 **Usage with spread operator:**
 ```typescript
@@ -415,24 +466,33 @@ updateTag(tag: string): void;
 ```typescript
 'use server'
 
-async function updateModel(id: string, data: FormData) {
-  await db.models.update({ where: { id }, data });
+async function updateResource(id: string, data: FormData) {
+  await db.resources.update({ where: { id }, data });
 
-  // On the server (Server Action context)
-  // Invalidate collection tag (plural) - affects all model listings
-  updateTag("models");
-
-  // Invalidate individual item tags (singular + id) - affects specific model profile
-  updateTag("model");
+  // Single item update - invalidate only the id tag
   updateTag(id);
 
-  redirect(`/models/profile/${id}`);
+  redirect(`/resources/${id}`);
+}
+
+async function publishResource(id: string) {
+  await db.resources.update({ where: { id }, data: { published: true } });
+
+  // Publishing affects item AND listing
+  updateTag(id);              // Item profile
+  updateTag("resources");     // Collection (published list changed)
+
+  // Don't invalidate "resource" - would affect ALL resources
+
+  redirect(`/resources/${id}`);
 }
 ```
 
-**Why multiple tags:**
-- Listings use `["models"]` (plural) - invalidate to refresh collections
-- Profile uses `["model", id]` (singular + id) - invalidate both "model" and id to refresh specific item
+**Tag selection:**
+- Single item update: `id` only
+- Publishing/unpublishing: `id` + `"resources"` (collection)
+- Bulk status change: `"resources"` + each `id`
+- Never invalidate generic singular (`"resource"`) for specific items
 
 **When to use:**
 - User must see changes immediately
@@ -486,15 +546,24 @@ revalidateTag('model-listing', { expire: 0 });
 ```typescript
 'use server'
 
-async function publishModel(id: string) {
-  await db.models.update({ where: { id }, data: { published: true } });
+async function updateResourceDetails(id: string, data: FormData) {
+  await db.resources.update({ where: { id }, data });
 
-  // Invalidate collection tag (plural) - background refresh for listings
-  revalidateTag("models", "max");
-
-  // Invalidate individual item tags (singular + id) - background refresh for profile
-  revalidateTag("model", "max");
+  // Update affects only this item
   revalidateTag(id, "max");
+}
+
+async function publishResource(id: string) {
+  await db.resources.update({ where: { id }, data: { published: true } });
+
+  // Publishing affects item and listing
+  revalidateTag(id, "max");           // Item profile
+  revalidateTag("resources", "max");  // Collection
+}
+
+async function revalidateAllResources() {
+  // Invalidate ALL items of this type
+  revalidateTag("resource", "max");
 }
 ```
 
@@ -646,10 +715,25 @@ When components nest with different `cacheLife` profiles, **shortest duration ta
 3. Choose invalidation strategy:
    - **Immediate:** `updateTag(tag)` - user sees changes right away
    - **Background:** `revalidateTag(tag, 'max')` - eventual consistency
-4. Invalidate following plural/singular pattern:
-   - Collection (plural): `updateTag("models")` - affects all listings tagged with `["models"]`
-   - Individual item (singular + id): `updateTag("model")` and `updateTag(id)` - affects profile tagged with `["model", id]`
-   - Invalidate all applicable tags for complete cache refresh
+4. Select tags based on mutation scope:
+   - **Single item update**: Invalidate only the id
+     ```typescript
+     updateTag(id)
+     ```
+   - **Item affecting listing**: Invalidate id + collection (plural)
+     ```typescript
+     updateTag(id)
+     updateTag("resources")
+     ```
+   - **Bulk affecting listing**: Invalidate collection + each id
+     ```typescript
+     updateTag("resources")
+     ids.forEach(id => updateTag(id))
+     ```
+   - **All items of type**: Invalidate generic singular (use sparingly)
+     ```typescript
+     updateTag("resource")  // Affects ALL items
+     ```
 5. Redirect or return response
 
 ### Workflow 4: Invalidate Cache from Route Handler
@@ -671,7 +755,7 @@ When components nest with different `cacheLife` profiles, **shortest duration ta
 6. **Use hierarchical tags** - Define tags as arrays for flexible invalidation
 7. **Use `updateTag` for immediate consistency** - When user must see changes right away in Server Actions
 8. **Default to `revalidateTag` with `"max"`** - For optimal performance with eventual consistency
-9. **Invalidate all applicable tags** - Invalidate plural (collection) and singular + id (item) tags when needed
+9. **Match invalidation scope to mutation** - Single item changes invalidate only the id tag, not generic tags affecting all items
 10. **Choose `cacheLife` based on data volatility** - Frequently changing data gets shorter durations
 11. **Wrap dynamic data in `<Suspense>`** - When using runtime APIs like `cookies()`, `headers()`
 12. **Use built-in profiles when appropriate** - `'hours'`, `'days'` are good defaults
@@ -684,7 +768,7 @@ When components nest with different `cacheLife` profiles, **shortest duration ta
 4. **Don't mix plural/singular incorrectly** - Collections use plural, individual items use singular + id
 5. **Don't use runtime APIs in cached scope** - `cookies()`, `headers()`, `searchParams` must be in `<Suspense>`
 6. **Don't forget cache invalidation** - Mutations must invalidate related caches
-7. **Don't invalidate only one tag** - For items tagged with `["model", id]`, invalidate both "model" and id
+7. **Don't invalidate generic tags for specific items** - Updating one item shouldn't invalidate ALL items via generic singular tag
 8. **Don't use `updateTag` in Route Handlers** - Only works in Server Actions, use `revalidateTag` instead
 9. **Don't skip the `profile` parameter in `revalidateTag`** - Single-argument form is deprecated
 10. **Don't make arguments non-serializable** - Functions, class instances break cache key generation
