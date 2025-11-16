@@ -3,11 +3,11 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useFormSubmissions } from "@/hooks/queries/form-submissions/use-form-submissions";
-import { useUniqueSubjects } from "@/hooks/queries/form-submissions/use-unique-subjects";
 import { useDeleteSubmission } from "@/hooks/queries/form-submissions/use-delete-submission";
 import { useUpdateSubmissionStatus } from "@/hooks/queries/form-submissions/use-update-submission-status";
 import { useBulkDeleteSubmissions } from "@/hooks/queries/form-submissions/use-bulk-delete-submissions";
 import { formSubmissionSearchParamsSchema } from "./_validators";
+import { FORM_SUBMISSION_SUBJECTS } from "@/lib/data/form-submission-subjects";
 import { SubmissionsTableSkeleton } from "./_components/submissions-table-skeleton";
 import { SubmissionsBulkActions } from "./_components/submissions-bulk-actions";
 import { SubmissionDetailSheet } from "./_components/submission-detail-sheet";
@@ -62,7 +62,6 @@ export default function FormSubmissionsPage() {
 
   // Fetch data
   const { data, isPending, error } = useFormSubmissions(parsed);
-  const { data: subjectsData } = useUniqueSubjects();
 
   // Mutations
   const deleteSubmission = useDeleteSubmission();
@@ -145,9 +144,6 @@ export default function FormSubmissionsPage() {
     setDetailSheetOpen(true);
   };
 
-  // Get all unique subjects from database
-  const uniqueSubjects = subjectsData?.subjects || [];
-
   return (
     <div className="space-y-6">
       {/* Filters and Bulk Actions */}
@@ -162,7 +158,7 @@ export default function FormSubmissionsPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Subjects</SelectItem>
-              {uniqueSubjects.map((subject) => (
+              {FORM_SUBMISSION_SUBJECTS.map((subject) => (
                 <SelectItem key={subject} value={subject}>
                   {subject}
                 </SelectItem>

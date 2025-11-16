@@ -1,6 +1,7 @@
 import { Category } from "@/lib/data/categories";
 import { Country } from "@/lib/data/countries";
 import { EyeColor } from "@/lib/data/eye-colors";
+import { FormSubmissionSubject } from "@/lib/data/form-submission-subjects";
 import { Gender } from "@/lib/data/genders";
 import { HairColor } from "@/lib/data/hair-colors";
 import { ImageType } from "@/lib/data/image-types";
@@ -139,7 +140,9 @@ export const formSubmissions = pgTable(
     name: varchar("name", { length: 255 }).notNull(),
     email: varchar("email", { length: 255 }).notNull(),
     phone: varchar("phone", { length: 50 }),
-    subject: varchar("subject", { length: 255 }).notNull(),
+    subject: varchar("subject", { length: 255 })
+      .notNull()
+      .$type<FormSubmissionSubject>(),
     message: text("message").notNull(),
     status: varchar("status", { length: 20 })
       .notNull()

@@ -51,8 +51,8 @@ export async function listFormSubmissions(input: ListFormSubmissionsInput) {
   }
 
   // Subject filter
-  if (input.subject && input.subject.trim()) {
-    conditions.push(eq(formSubmissions.subject, input.subject.trim()));
+  if (input.subject) {
+    conditions.push(eq(formSubmissions.subject, input.subject));
   }
 
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;

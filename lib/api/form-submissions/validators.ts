@@ -6,6 +6,7 @@
  */
 
 import { z } from "zod";
+import { FORM_SUBMISSION_SUBJECTS } from "@/lib/data/form-submission-subjects";
 
 // Common validators
 export const uuidSchema = z.string().uuid("Invalid ID format");
@@ -21,12 +22,15 @@ export const sortOrderSchema = z.enum(["asc", "desc"]).default("desc");
 // Status schema
 export const formSubmissionStatusSchema = z.enum(["new", "read", "responded"]);
 
+// Subject schema
+export const formSubmissionSubjectSchema = z.enum(FORM_SUBMISSION_SUBJECTS);
+
 /**
  * List form submissions query schema
  * For GET /api/form-submissions
  */
 export const listFormSubmissionsQuerySchema = paginationQuerySchema.extend({
-  subject: z.string().optional(),
+  subject: formSubmissionSubjectSchema.optional(),
   status: formSubmissionStatusSchema.optional(),
   sortBy: z.enum(["createdAt"]).optional().default("createdAt"),
   sortOrder: sortOrderSchema.optional(),

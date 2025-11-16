@@ -4,6 +4,8 @@
  * Includes both public contact form submission and admin management operations
  */
 
+import type { FormSubmissionSubject } from "@/lib/data/form-submission-subjects";
+
 /**
  * Form submission status
  */
@@ -16,7 +18,7 @@ export interface SubmitContactFormInput {
   name: string;
   email: string;
   phone?: string | null;
-  subject: string;
+  subject: FormSubmissionSubject;
   message: string;
 }
 
@@ -26,7 +28,7 @@ export interface SubmitContactFormInput {
 export interface ListFormSubmissionsInput {
   page: number;
   limit: number;
-  subject?: string;
+  subject?: FormSubmissionSubject;
   status?: FormSubmissionStatus;
   sortBy?: "createdAt";
   sortOrder?: "asc" | "desc";

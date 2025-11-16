@@ -4,8 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { submitContactFormSchema, type SubmitContactFormInput, contactSubjects } from "@/actions/form-submissions/validator";
+import { submitContactFormSchema, type SubmitContactFormInput } from "@/actions/form-submissions/validator";
 import { submitContactForm } from "@/actions/form-submissions/action";
+import { FORM_SUBMISSION_SUBJECTS } from "@/lib/data/form-submission-subjects";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -142,7 +143,7 @@ export default function ContactPage() {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {contactSubjects.map((subject) => (
+                      {FORM_SUBMISSION_SUBJECTS.map((subject) => (
                         <SelectItem key={subject} value={subject}>
                           {subject}
                         </SelectItem>

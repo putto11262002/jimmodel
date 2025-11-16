@@ -6,21 +6,17 @@
  */
 
 import { z } from "zod";
+import { FORM_SUBMISSION_SUBJECTS } from "@/lib/data/form-submission-subjects";
 
 /**
- * Contact form subject categories
+ * Contact form subject categories enum (Zod)
  */
-export const contactSubjects = [
-  "Model Application / Join Our Agency",
-  "Book a Model / Client Inquiry",
-  "General Question",
-  "Partnership / Collaboration",
-  "Media / Press Inquiry",
-  "Current Model Support",
-  "Other",
-] as const;
+export const contactSubjectEnum = z.enum(FORM_SUBMISSION_SUBJECTS);
 
-export const contactSubjectEnum = z.enum(contactSubjects);
+/**
+ * Re-export the subjects array for UI components
+ */
+export const contactSubjects = FORM_SUBMISSION_SUBJECTS;
 
 /**
  * Submit contact form schema
