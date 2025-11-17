@@ -2,9 +2,16 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
-import { CreateModelDialogProvider } from "./@header/models/_components/create-model-dialog";
 
-export default function Providers({ children }: { children: React.ReactNode }) {
+/**
+ * Admin root layout
+ * Provides QueryClient for all admin routes (both auth and admin)
+ */
+export default function AdminRootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [queryClient] = React.useState(
     () =>
       new QueryClient({
@@ -23,7 +30,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <CreateModelDialogProvider>{children}</CreateModelDialogProvider>
+      {children}
     </QueryClientProvider>
   );
 }
