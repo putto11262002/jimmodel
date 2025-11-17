@@ -48,7 +48,7 @@ const nextConfig: NextConfig = {
 Cache configuration lives in `config/cache-component.ts`:
 
 ```typescript
-const MINUTE = 60 * 1000;
+const MINUTE = 60;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
 
@@ -61,7 +61,7 @@ export const cacheComponentConfig = {
     profile: {
       stale: HOUR,
       revalidate: DAY * 7,
-      expires: DAY * 30,
+      expire: DAY * 30,
     },
   },
   modelProfile: {
@@ -69,7 +69,7 @@ export const cacheComponentConfig = {
     profile: {
       stale: HOUR,
       revalidate: DAY * 30,
-      expires: DAY * 35,
+      expire: DAY * 35,
     },
   },
 } as const;
@@ -84,6 +84,52 @@ export const cacheComponentConfig = {
 - **Clear semantics**: Plural vs singular indicates scope (collection vs item)
 - **Flexible invalidation**: Invalidate all models via `"models"` tag OR specific model via `"model"` + id
 - **Type safety**: Explicit `string[]` return type for clarity
+
+## Understanding params and Static Generation
+
+### params Prop Behavior
+
+The `params` prop in page components is **runtime data by default** - it remains dynamic unless you provide static values through `generateStaticParams`.
+
+**Default behavior (no generateStaticParams):**
+```typescript
+// app/models/[id]/page.tsx
+export default async function Page({ params }: PageProps) {
+  const { id } = await params; // Runtime data - different per request
+  // Page renders dynamically for each unique id
+}
+```
+
+**With generateStaticParams:**
+```typescript
+// app/models/[id]/page.tsx
+export async function generateStaticParams() {
+  const models = await db.query.models.findMany();
+  return models.map((model) => ({ id: model.id }));
+}
+
+export default async function Page({ params }: PageProps) {
+  "use cache";
+  const { id } = await params; // Static for prerendered paths
+  cacheLife(cacheComponentConfig.modelProfile.profile);
+  cacheTag(...cacheComponentConfig.modelProfile.tag(id));
+
+  const model = await getModel({ id });
+  return <div>...</div>;
+}
+```
+
+**How it works:**
+- **Provided param values** (from `generateStaticParams`) → Static prerendering at build time
+- **Other param values** → Dynamic rendering at runtime
+- Enables hybrid approach: prerender popular paths, render others on-demand
+
+**Use cases:**
+- E-commerce: Prerender top 100 products, render long-tail products dynamically
+- Blog: Prerender recent posts, render archive posts on-demand
+- Profiles: Prerender featured users, render others dynamically
+
+**Key insight:** `generateStaticParams` transforms specific param values from runtime to build-time static data, enabling selective prerendering with `'use cache'`.
 
 ## Decision Framework: Cache vs Suspense
 
@@ -703,7 +749,7 @@ When components nest with different `cacheLife` profiles, **shortest duration ta
 3. Define `tag` following naming convention:
    - **Collection** (plural): `tag: ["resources"]` (string array)
    - **Individual item** (singular + id): `tag: (id: string): string[] => ["resource", id]` (function returning string array)
-4. Define `profile` object with `stale`, `revalidate`, `expires` in milliseconds
+4. Define `profile` object with `stale`, `revalidate`, `expires` in seconds
 5. Use constants: `MINUTE`, `HOUR`, `DAY` for readability
 6. Export type will auto-update via `as const`
 7. Remember: Plural for collections, singular + identifier for individual items
@@ -742,6 +788,99 @@ When components nest with different `cacheLife` profiles, **shortest duration ta
 2. Perform operation (webhook processing, external trigger)
 3. Call `revalidateTag(tag, 'max')` for background revalidation
 4. Return response
+
+## Common Errors and Troubleshooting
+
+### Missing Suspense Boundary Error
+
+**Error message:**
+```
+Uncached data was accessed outside of <Suspense>
+```
+
+**What it means:** Dynamic runtime data (using `cookies()`, `headers()`, or `searchParams`) was accessed without a `<Suspense>` boundary. This delays the entire page from rendering, resulting in a slow user experience where users see nothing until all data loads.
+
+**Why this error exists:** Next.js enforces this to ensure your app loads instantly on every navigation. Without `<Suspense>`, users would hit a blocking runtime render with nothing to show - no static shell, no loading state, just a blank screen while waiting for data.
+
+**Two ways to fix:**
+
+#### Fix 1: Wrap in Suspense (for runtime-specific data)
+
+Use when data **must** be fetched at runtime (user-specific, request-specific):
+
+```typescript
+// app/dashboard/page.tsx
+import { Suspense } from 'react';
+import { UserProfile } from './_components/user-profile';
+import { RecentActivity } from './_components/recent-activity';
+
+export default function Page() {
+  return (
+    <div>
+      <h1>Dashboard</h1>
+
+      {/* Static shell renders immediately */}
+      <Suspense fallback={<ProfileSkeleton />}>
+        <UserProfile /> {/* Uses cookies() - streams when ready */}
+      </Suspense>
+
+      <Suspense fallback={<ActivitySkeleton />}>
+        <RecentActivity /> {/* Uses headers() - streams when ready */}
+      </Suspense>
+    </div>
+  );
+}
+```
+
+**Benefits:**
+- Static shell (heading, layout) renders instantly
+- Dynamic sections stream in as they become ready
+- Users see content immediately, not a blank page
+- Each section loads independently
+
+#### Fix 2: Use 'use cache' (for cacheable data)
+
+Use when data **can** be cached and doesn't need runtime APIs:
+
+```typescript
+// app/products/[category]/page.tsx
+"use cache"; // Moved runtime data to build-time cache
+import { cacheLife, cacheTag } from 'next/cache';
+
+export default async function Page({ params }: PageProps) {
+  cacheLife('hours');
+  cacheTag('products');
+
+  const { category } = await params; // Now cached, not runtime
+  const products = await getProducts(category);
+
+  return <div>{/* ... */}</div>;
+}
+```
+
+**Benefits:**
+- Entire component prerendered at build time
+- Instant delivery to users (static HTML)
+- No runtime data fetching needed
+- Background revalidation keeps content fresh
+
+**Decision tree:**
+
+```
+Getting this error?
+│
+└─ Does this data need runtime APIs (cookies, headers, searchParams)?
+    │
+    ├─ YES → Fix 1: Wrap in <Suspense>
+    │   └─ Example: User authentication, personalized content, session data
+    │
+    └─ NO → Fix 2: Use 'use cache'
+        └─ Example: Product listings, blog posts, public profiles
+```
+
+**Important:** The error prevents a bad UX pattern where users would see nothing while the entire page blocks on runtime data. By requiring either `<Suspense>` (streaming) or `'use cache'` (prerendering), Next.js ensures users always get an instant initial render.
+
+**Note:** Request-specific information (`params`, `cookies`, `headers`) is **not available** during static prerendering with `'use cache'`, so it must be wrapped in `<Suspense>` instead if it needs runtime evaluation.
 
 ## Guidelines
 

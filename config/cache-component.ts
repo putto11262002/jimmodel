@@ -1,4 +1,4 @@
-const MINUTE = 60 * 1000;
+const MINUTE = 60;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
 
@@ -11,7 +11,7 @@ export const cacheComponentConfig = {
     profile: {
       stale: HOUR,
       revalidate: DAY * 7,
-      expires: DAY * 30,
+      expire: DAY * 30,
     },
   },
   modelProfile: {
@@ -19,7 +19,7 @@ export const cacheComponentConfig = {
     profile: {
       stale: HOUR,
       revalidate: DAY * 30,
-      expires: DAY * 35,
+      expire: DAY * 35,
     },
   },
 } as const;
