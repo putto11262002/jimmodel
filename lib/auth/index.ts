@@ -1,7 +1,6 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@/db";
-import * as schema from "@/db/schema";
 
 /**
  * Better Auth Server Instance
@@ -15,18 +14,11 @@ import * as schema from "@/db/schema";
  *
  * Environment Variables Required:
  * - BETTER_AUTH_SECRET: Random secret key (min 32 characters)
- * - BETTER_AUTH_URL: Base URL of the application
  * - BETTER_AUTH_TRUST_HOST: Set to true for local development
  */
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
-    schema: {
-      user: schema.user,
-      session: schema.session,
-      account: schema.account,
-      verification: schema.verification,
-    },
   }),
   emailAndPassword: {
     enabled: true,
@@ -48,9 +40,9 @@ export const auth = betterAuth({
       enabled: false,
     },
   },
-  trustedOrigins: process.env.BETTER_AUTH_URL
-    ? [process.env.BETTER_AUTH_URL]
-    : [],
+  trustedOrigins: process.env.VERCEL_URL
+    ? [`https://${process.env.VERCEL_URL}`]
+    : ["http://localhost:3000"],
 });
 
 /**

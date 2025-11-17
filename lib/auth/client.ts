@@ -20,13 +20,13 @@ import { createAuthClient } from "better-auth/react";
  *
  * Usage:
  * ```tsx
- * import { authClient } from "@/lib/auth-client";
+ * import { signIn, signUp, useSession } from "@/lib/auth/client";
  *
  * function MyComponent() {
- *   const { data: session, isPending } = authClient.useSession();
+ *   const { data: session, isPending } = useSession();
  *
  *   const handleSignIn = async () => {
- *     await authClient.signIn.email({
+ *     await signIn.email({
  *       email: "user@example.com",
  *       password: "password123"
  *     });
@@ -37,10 +37,12 @@ import { createAuthClient } from "better-auth/react";
  * ```
  */
 export const authClient = createAuthClient({
-  baseURL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL || "http://localhost:3000",
+  baseURL: process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}`
+    : "http://localhost:3000",
 });
 
 /**
- * Re-export commonly used hooks for convenience
+ * Re-export commonly used auth methods and hooks for convenience
  */
-export const { useSession } = authClient;
+export const { signIn, signUp, useSession } = authClient;
