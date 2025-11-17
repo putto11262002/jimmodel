@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(git status:*),Bash(git diff:*), Bash(git branch:*), Bash(git log:*), Bash(gh pr view:*)
+allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git branch:*), Bash(git log:*), Bash(gh pr view:*)
 argument-hint: "[title (optional)]"
 description: Create a GitHub pull request for the current branch using gh
 ---
@@ -55,5 +55,10 @@ The user may optionally pass a PR title as the first argument: `$1`.
    - The PR URL
    - The PR title
    - A one- or two-line summary of what was included (based on the body you generated).
+
+
+## Constraints
+
+* DO NOT add Claude co-authorship footer to commits
 
 Be careful not to create duplicate PRs and always rely on the injected bash context above when deciding what to do.
