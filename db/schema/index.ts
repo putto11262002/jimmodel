@@ -19,6 +19,9 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 
+// Export Better Auth schema
+export * from "./auth";
+
 // Models Table
 export const models = pgTable(
   "models",
