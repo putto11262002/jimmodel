@@ -1,6 +1,6 @@
 ---
-allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git branch:*), Bash(git log:*), Bash(gh pr view:*)
-argument-hint: "[title (optional)]"
+allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git branch:*), Bash(git log:*), Bash(gh pr view:*), Bash(gh issue view:*)
+argument-hint: "[title or issue#] [issue# (optional)]"
 description: Create a GitHub pull request for the current branch using gh
 ---
 
@@ -16,7 +16,18 @@ Gather the following context first:
 - Diff summary vs HEAD: !`git diff --stat`
 - Check if a PR already exists for this branch: !`gh pr view --json number,title,url,headRefName || echo "NO_EXISTING_PR"`
 
-The user may optionally pass a PR title as the first argument: `$1`.
+The user may optionally pass arguments:
+- `$1` - Can be either a custom PR title (text) or an issue number (e.g., "123" or "#123")
+- `$2` - Optional issue number if `$1` was used as a title
+
+**Argument parsing logic:**
+- If `$1` matches a number or starts with `#` → treat as issue number
+- If `$1` is text and `$2` exists → `$1` is title, `$2` is issue number
+- If `$1` is text and no `$2` → `$1` is title (existing behavior)
+- If no arguments → use commit message as title
+
+**If an issue number is provided**, fetch issue details:
+- !`gh issue view <issue-number> --json number,title,body,labels,state || echo "ISSUE_NOT_FOUND"`
 
 ## Your task
 
@@ -26,23 +37,36 @@ The user may optionally pass a PR title as the first argument: `$1`.
    - Instead, show a short summary of the existing PR (number, title, URL) and stop.
 
 2. **If no PR exists yet**, create one for the current branch:
-   - Determine the PR **title**:
-     - If `$1` is non-empty, use `$1` as the PR title.
-     - Otherwise, use the most representative recent commit message (first line) as the title.
-   - Compose a concise PR **body** using this minimal template (fill in from the context above):
+   - **Parse arguments** using the logic described above to determine:
+     - Custom title (if provided)
+     - Issue number (if provided)
 
-     Summary  
-     - Brief explanation of what this PR does and why.
+   - **Determine the PR title**:
+     - If custom title provided → use it
+     - Else if issue provided → use issue title
+     - Otherwise → use the most representative recent commit message (first line)
 
-     Changes  
-     - Key change 1  
-     - Key change 2  
+   - **Compose a concise PR body** using this minimal template:
 
-     Testing  
-     - Tests performed and how they were run.
+     ## Summary
+     - Brief explanation of what this PR does and why
+     - If issue context available, incorporate the issue description/requirements
 
-     Notes  
-     - Anything reviewers should know (edge cases, follow-ups, migrations).
+     ## Changes
+     - Key change 1 (based on git diff and commits)
+     - Key change 2
+
+     ## Testing
+     - Tests performed and how they were run
+
+     ## Notes
+     - Anything reviewers should know (edge cases, follow-ups, migrations)
+     - If issue labels are present, mention them if relevant (e.g., "bug fix", "enhancement")
+
+     **If an issue number was provided**, append at the end:
+     ```
+     Closes #<issue-number>
+     ```
 
 3. Use the **Bash tool** to run `gh pr create` for the current branch, targeting the repository’s default base branch.  
    - The command should look like (adjusting title/body appropriately):
@@ -57,8 +81,27 @@ The user may optionally pass a PR title as the first argument: `$1`.
    - A one- or two-line summary of what was included (based on the body you generated).
 
 
+## Usage Examples
+
+```bash
+# Use commit message as title, no issue reference
+/git_create_pr
+
+# Use custom title, no issue reference
+/git_create_pr "Add user authentication"
+
+# Use issue #42 for context (title from issue)
+/git_create_pr 42
+/git_create_pr #42
+
+# Use custom title + issue #42 for context
+/git_create_pr "Add user authentication" 42
+```
+
 ## Constraints
 
-* DO NOT add Claude co-authorship footer to commits
+* DO NOT add Claude co-authorship footer to pull requests
+* When an issue is referenced, always add "Closes #<number>" to the PR body
+* Use issue context to write more informed PR descriptions when available
 
 Be careful not to create duplicate PRs and always rely on the injected bash context above when deciding what to do.
