@@ -80,7 +80,12 @@ TodoWrite Entry: "Synthesis complete; all required knowledge areas covered"
 
 ### Phase 6: Final Output Formatting
 
-Return output in this strict format:
+**Determine Topic Name:**
+- Extract a short, kebab-case topic name from the goal (e.g., "server-actions", "data-caching", "authentication")
+- Use this as the filename: `docs/research/<topic>.md`
+
+**Write to File:**
+Use the Write tool to create `docs/research/<topic>.md` with this strict format:
 
 ```markdown
 # Feature Enablement Brief
@@ -108,7 +113,13 @@ Warnings, version issues, rate limits, constraints.
 Curated links: API ref, guides, tutorials.
 ```
 
-TodoWrite Entry: "Final Feature Enablement Brief generated"
+TodoWrite Entry: "Final Feature Enablement Brief written to docs/research/<topic>.md"
+
+**Final Output:**
+Return only the file path to the user:
+```
+Research complete. Documentation saved to: docs/research/<topic>.md
+```
 
 ## Critical Constraints
 
