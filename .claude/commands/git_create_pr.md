@@ -100,7 +100,7 @@ The user may optionally pass arguments:
 
 ## Constraints
 
-* DO NOT add Claude co-authorship footer to commits
+* DO NOT add Claude co-authorship footer to pull requests
 * When an issue is referenced, always add "Closes #<number>" to the PR body
 * Use issue context to write more informed PR descriptions when available
 
