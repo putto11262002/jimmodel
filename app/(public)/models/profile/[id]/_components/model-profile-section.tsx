@@ -15,7 +15,6 @@ type Model = Awaited<ReturnType<typeof getModel>>;
 
 interface ModelProfileSectionProps {
   model: Model;
-  variant: "compact" | "full";
   className?: string;
 }
 
@@ -62,24 +61,12 @@ function getDisplayImage(model: Model) {
 function ProfileImage({
   imageUrl,
   altText,
-  variant,
 }: {
   imageUrl?: string;
   altText: string;
-  variant: "compact" | "full";
 }) {
-  const containerClasses =
-    variant === "compact"
-      ? "relative aspect-[3/4] md:aspect-[4/5] rounded-lg overflow-hidden bg-muted max-h-[400px] md:max-h-[480px]"
-      : "relative aspect-[3/4] rounded-lg overflow-hidden bg-muted";
-
-  const sizes =
-    variant === "compact"
-      ? "(max-width: 768px) 100vw, (max-width: 1024px) 300px, 380px"
-      : "(max-width: 1024px) 100vw, 50vw";
-
   return (
-    <div className={containerClasses}>
+    <div className="relative aspect-[3/4] md:aspect-[4/5] rounded-lg overflow-hidden bg-muted max-h-[400px] md:max-h-[480px]">
       {imageUrl ? (
         <Image
           src={imageUrl}
@@ -87,7 +74,7 @@ function ProfileImage({
           fill
           className="object-cover"
           priority
-          sizes={sizes}
+          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 300px, 380px"
         />
       ) : (
         <div className="absolute inset-0 flex items-center justify-center">
@@ -158,57 +145,12 @@ function StatsGrid({ model, age }: { model: Model; age: number | null }) {
           ) : null
         }
       />
-      <StatItem label="Nationality" value={model.nationality} />
-      <StatItem label="Ethnicity" value={model.ethnicity} />
-    </div>
-  );
-}
-
-function TalentsSection({ talents }: { talents: string[] }) {
-  if (!talents || talents.length === 0) return null;
-
-  return (
-    <div>
-      <h2 className="text-sm md:text-base lg:text-lg font-semibold text-foreground mb-2 md:mb-3">
-        Talents
-      </h2>
-      <div className="flex flex-wrap gap-1.5 md:gap-2">
-        {talents.map((talent, index) => (
-          <Badge key={index} variant="secondary" className="text-xs md:text-sm">
-            {talent}
-          </Badge>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function ExperiencesSection({ experiences }: { experiences: string[] }) {
-  if (!experiences || experiences.length === 0) return null;
-
-  return (
-    <div>
-      <h2 className="text-base md:text-lg font-semibold text-foreground mb-2 md:mb-3">
-        Experience
-      </h2>
-      <ul className="space-y-1.5 md:space-y-2 p-4 md:p-5 rounded-lg border bg-card">
-        {experiences.map((experience, index) => (
-          <li
-            key={index}
-            className="text-sm md:text-base text-muted-foreground flex items-start"
-          >
-            <span className="mr-2 mt-1.5 md:mt-2 h-1.5 w-1.5 rounded-full bg-muted-foreground flex-shrink-0" />
-            <span>{experience}</span>
-          </li>
-        ))}
-      </ul>
     </div>
   );
 }
 
 export function ModelProfileSection({
   model,
-  variant,
   className,
 }: ModelProfileSectionProps) {
   const age = model.dateOfBirth ? calculateAge(model.dateOfBirth) : null;
@@ -216,9 +158,9 @@ export function ModelProfileSection({
   const categoryDisplay =
     model.category.charAt(0).toUpperCase() + model.category.slice(1);
 
-  if (variant === "compact") {
-    return (
-      <div className={className}>
+  return (
+    <div className={className}>
+      <div className="flex flex-col gap-6">
         {/* Breadcrumb */}
         <Breadcrumb>
           <BreadcrumbList>
@@ -242,17 +184,13 @@ export function ModelProfileSection({
           </BreadcrumbList>
         </Breadcrumb>
 
-        {/* Compact Layout */}
+        {/* Profile Layout */}
         <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] lg:grid-cols-[380px_1fr] gap-6 md:gap-8">
           {/* Profile Image */}
-          <ProfileImage
-            imageUrl={displayImage}
-            altText={model.name}
-            variant="compact"
-          />
+          <ProfileImage imageUrl={displayImage} altText={model.name} />
 
           {/* Details Column */}
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 h-full">
             {/* Header */}
             <div>
               <div>
@@ -282,7 +220,7 @@ export function ModelProfileSection({
               </div>
             )}
 
-            {/* Talents - Compact */}
+            {/* Talents */}
             {model.talents && model.talents.length > 0 && (
               <div>
                 <h2 className="text-sm font-semibold text-foreground mb-2">
@@ -290,11 +228,7 @@ export function ModelProfileSection({
                 </h2>
                 <div className="flex flex-wrap gap-1.5">
                   {model.talents.map((talent, index) => (
-                    <Badge
-                      key={index}
-                      variant="secondary"
-                      className="text-xs"
-                    >
+                    <Badge key={index} variant="secondary" className="text-xs">
                       {talent}
                     </Badge>
                   ))}
@@ -326,87 +260,6 @@ export function ModelProfileSection({
             </ul>
           </div>
         )}
-      </div>
-    );
-  }
-
-  // Full variant
-  return (
-    <div className={className}>
-      {/* Breadcrumb */}
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem key="home">
-            <BreadcrumbLink href="/">Home</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator key="sep-1" />
-          <BreadcrumbItem key="models">
-            <BreadcrumbLink href="/models">Models</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator key="sep-2" />
-          <BreadcrumbItem key="category">
-            <BreadcrumbLink href={`/models/${model.category}/1`}>
-              {categoryDisplay}
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator key="sep-3" />
-          <BreadcrumbItem key="model">
-            <BreadcrumbPage>{model.name}</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
-      {/* Full Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 lg:gap-10">
-        {/* Left Column - Image */}
-        <div>
-          <ProfileImage
-            imageUrl={displayImage}
-            altText={model.name}
-            variant="full"
-          />
-        </div>
-
-        {/* Right Column - Details */}
-        <div className="flex flex-col gap-6 md:gap-8">
-          {/* Header */}
-          <div>
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-1 md:mb-2">
-                {model.name}
-              </h1>
-              {model.nickName && (
-                <p className="text-lg md:text-xl text-muted-foreground">
-                  &quot;{model.nickName}&quot;
-                </p>
-              )}
-            </div>
-            <div className="flex gap-2 mt-3 md:mt-4">
-              {getStatusBadge(model.local, model.inTown)}
-            </div>
-          </div>
-
-          {/* Bio */}
-          {model.bio && (
-            <div>
-              <h2 className="text-base md:text-lg font-semibold text-foreground mb-2">
-                Bio
-              </h2>
-              <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
-                {model.bio}
-              </p>
-            </div>
-          )}
-
-          {/* Stats Grid */}
-          <StatsGrid model={model} age={age} />
-
-          {/* Talents */}
-          <TalentsSection talents={model.talents || []} />
-
-          {/* Experiences */}
-          <ExperiencesSection experiences={model.experiences || []} />
-        </div>
       </div>
     </div>
   );

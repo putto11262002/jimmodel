@@ -1,15 +1,44 @@
 import { cacheComponentConfig } from "@/config/cache-component";
-import { getModel } from "@/lib/core/models/service";
+import { getModel, listModels } from "@/lib/core/models/service";
+import { CATEGORIES } from "@/lib/data/categories";
 import type { Metadata } from "next";
 import { cacheLife, cacheTag } from "next/cache";
+import { notFound } from "next/navigation";
+import { cache } from "react";
 import { ModelProfileSection } from "./_components/model-profile-section";
 import { PortfolioTabs } from "./_components/portfolio-tabs";
-import { fetchPublishedModel } from "./_utils/fetch-model";
 
 interface PageProps {
   params: Promise<{
     id: string;
   }>;
+}
+
+const _getModel = cache(async (id: string) => {
+  "use cache"; // define cache derieective here because need id for tag
+  cacheLife(cacheComponentConfig.modelProfile.profile);
+  cacheTag(...cacheComponentConfig.modelProfile.tag(id));
+  const model = await getModel({ id });
+  if (!model.published) {
+    notFound();
+  }
+  return model;
+});
+
+export async function generateStaticParams(): Promise<{ id: string }[]> {
+  return Promise.all(
+    CATEGORIES.map(async (category) => {
+      return listModels({
+        category: category,
+        page: 1,
+        limit: 12,
+        sortBy: "createdAt",
+        sortOrder: "desc",
+      });
+    }),
+  ).then((models) =>
+    models.map((model) => model.items.map((m) => ({ id: m.id }))).flat(),
+  );
 }
 
 // Dynamic metadata
@@ -18,13 +47,10 @@ export async function generateMetadata({
 }: {
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
-  "use cache"; // define cache derieective here because need id for tag
   const { id } = await params;
-  cacheLife(cacheComponentConfig.modelListing.profile);
-  cacheTag(...cacheComponentConfig.modelProfile.tag(id));
 
   try {
-    const model = await getModel({ id });
+    const model = await _getModel(id);
 
     return {
       title: `${model.name} | J.I.M. Model Profile`,
@@ -45,11 +71,11 @@ export async function generateMetadata({
 export default async function ModelProfilePage({ params }: PageProps) {
   "use cache"; // define cache derieective here because need id for tag
   const { id } = await params;
-  cacheLife(cacheComponentConfig.modelListing.profile);
+  cacheLife(cacheComponentConfig.modelProfile.profile);
   cacheTag(...cacheComponentConfig.modelProfile.tag(id));
 
   // Fetch published model
-  const model = await fetchPublishedModel(id);
+  const model = await _getModel(id);
 
   // Calculate image counts by type
   const counts = {
@@ -62,16 +88,12 @@ export default async function ModelProfilePage({ params }: PageProps) {
   return (
     <div>
       {/* Profile Section */}
-      <div className="container mx-auto px-4 py-6 md:py-8 lg:py-10">
-        <div className="max-w-7xl mx-auto">
-          <ModelProfileSection model={model} variant="full" />
-        </div>
-      </div>
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-4">
+          <div className="max-w-7xl mx-auto space-y-6 md:space-y-8">
+            <ModelProfileSection model={model} />
 
-      {/* Portfolio Gallery Section with Tabs */}
-      <div className="bg-muted/20 py-6 md:py-8 lg:py-10">
-        <div className="container mx-auto px-4">
-          <div className="max-w-7xl mx-auto">
+            {/* Portfolio Gallery Section with Tabs */}
             <PortfolioTabs
               images={model.images}
               modelName={model.name}

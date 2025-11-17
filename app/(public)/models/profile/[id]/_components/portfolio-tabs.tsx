@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { PortfolioImageGrid } from "./portfolio-image-grid";
 import type { getModel } from "@/lib/core/models/service";
 
@@ -60,12 +59,9 @@ export function PortfolioTabs({
           return (
             <Button
               key={tab.value}
-              variant={isActive ? "outline" : "ghost"}
+              variant={isActive ? "outline" : "link"}
               onClick={() => setActiveTab(tab.value)}
-              className={cn(
-                "font-medium",
-                !isActive && "text-muted-foreground hover:text-foreground",
-              )}
+              className="font-medium"
             >
               <span>{tab.label}</span>
               <span className="ml-1.5 text-xs text-muted-foreground">

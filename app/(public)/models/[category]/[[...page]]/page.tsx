@@ -1,5 +1,4 @@
 // This is case every thins exported here any comp here is cached
-"use cache";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -38,6 +37,9 @@ export async function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
+  "use cache";
+  cacheLife(cacheComponentConfig.modelListing.profile);
+  cacheTag(...cacheComponentConfig.modelListing.tag);
   const { category } = await params;
 
   // Capitalize category for title
@@ -50,6 +52,7 @@ export async function generateMetadata({
 }
 
 export default async function ModelListingPage({ params }: PageProps) {
+  "use cache";
   cacheLife(cacheComponentConfig.modelListing.profile);
   cacheTag(...cacheComponentConfig.modelListing.tag);
   const { category, page: pageParam } = await params;
