@@ -6,7 +6,7 @@
  */
 
 import * as formSubmissionService from "@/lib/core/form-submissions/service";
-import { requireAuth } from "@/lib/api/utils/auth";
+import { isAuth } from "@/lib/api/middlewares/auth";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -21,11 +21,8 @@ export const formSubmissionRoutes = new Hono()
    * GET /api/form-submissions/subjects
    * Get all unique subjects from form submissions
    */
-  .get("/subjects", async (c) => {
+  .get("/subjects", isAuth, async (c) => {
     try {
-      const authError = requireAuth(c);
-      if (authError) return authError();
-
       const subjects = await formSubmissionService.getUniqueSubjects();
       return c.json({ subjects }, 200);
     } catch (err) {
@@ -38,11 +35,8 @@ export const formSubmissionRoutes = new Hono()
    * GET /api/form-submissions
    * List all form submissions with pagination, filtering, and search
    */
-  .get("/", zValidator("query", listFormSubmissionsQuerySchema), async (c) => {
+  .get("/", isAuth, zValidator("query", listFormSubmissionsQuerySchema), async (c) => {
     try {
-      const authError = requireAuth(c);
-      if (authError) return authError();
-
       const query = c.req.valid("query");
       const result = await formSubmissionService.listFormSubmissions(query);
       return c.json(result, 200);
@@ -58,12 +52,10 @@ export const formSubmissionRoutes = new Hono()
    */
   .get(
     "/:id",
+    isAuth,
     zValidator("param", z.object({ id: z.string().uuid() })),
     async (c) => {
       try {
-        const authError = requireAuth(c);
-        if (authError) return authError();
-
         const { id } = c.req.valid("param");
         const result = await formSubmissionService.getFormSubmission({ id });
         return c.json(result, 200);
@@ -83,13 +75,11 @@ export const formSubmissionRoutes = new Hono()
    */
   .patch(
     "/:id",
+    isAuth,
     zValidator("param", z.object({ id: z.string().uuid() })),
     zValidator("json", updateFormSubmissionStatusSchema),
     async (c) => {
       try {
-        const authError = requireAuth(c);
-        if (authError) return authError();
-
         const { id } = c.req.valid("param");
         const { status } = c.req.valid("json");
         const result = await formSubmissionService.updateFormSubmissionStatus({
@@ -115,12 +105,10 @@ export const formSubmissionRoutes = new Hono()
    */
   .delete(
     "/:id",
+    isAuth,
     zValidator("param", z.object({ id: z.string().uuid() })),
     async (c) => {
       try {
-        const authError = requireAuth(c);
-        if (authError) return authError();
-
         const { id } = c.req.valid("param");
         const result = await formSubmissionService.deleteFormSubmission({ id });
         return c.json(result, 200);
@@ -144,12 +132,10 @@ export const formSubmissionRoutes = new Hono()
    */
   .post(
     "/bulk-delete",
+    isAuth,
     zValidator("json", bulkDeleteFormSubmissionsSchema),
     async (c) => {
       try {
-        const authError = requireAuth(c);
-        if (authError) return authError();
-
         const { ids } = c.req.valid("json");
         const result = await formSubmissionService.bulkDeleteFormSubmissions({
           ids,

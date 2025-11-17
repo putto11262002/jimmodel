@@ -6,12 +6,11 @@
  */
 
 import * as modelService from "@/lib/core/models/service";
-import { requireAuth } from "@/lib/api/utils/auth";
+import { isAuth } from "@/lib/api/middlewares/auth";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { revalidateTag } from "next/cache";
 import { z } from "zod";
-import { cacheComponentConfig } from "@/config/cache-component";
 import {
   bulkUpdatePublishedSchema,
   createModelSchema,
@@ -35,11 +34,8 @@ export const modelRoutes = new Hono()
       return c.json({ error: message }, 500);
     }
   })
-  .post("/", zValidator("json", createModelSchema), async (c) => {
+  .post("/", isAuth, zValidator("json", createModelSchema), async (c) => {
     try {
-      const authError = requireAuth(c);
-      if (authError) return authError();
-
       const data = c.req.valid("json");
       const result = await modelService.createModel(data);
       return c.json(result, 201);
@@ -55,12 +51,10 @@ export const modelRoutes = new Hono()
    */
   .get(
     "/:id",
+    isAuth,
     zValidator("param", z.object({ id: z.string().uuid() })),
     async (c) => {
       try {
-        const authError = requireAuth(c);
-        if (authError) return authError();
-
         const { id } = c.req.valid("param");
         const result = await modelService.getModel({ id });
         return c.json(result, 200);
@@ -80,13 +74,11 @@ export const modelRoutes = new Hono()
    */
   .put(
     "/:id",
+    isAuth,
     zValidator("param", z.object({ id: z.string().uuid() })),
     zValidator("json", updateModelSchema),
     async (c) => {
       try {
-        const authError = requireAuth(c);
-        if (authError) return authError();
-
         const { id } = c.req.valid("param");
         const data = c.req.valid("json");
         const result = await modelService.updateModel({ id, ...data });
@@ -107,12 +99,10 @@ export const modelRoutes = new Hono()
    */
   .delete(
     "/:id",
+    isAuth,
     zValidator("param", z.object({ id: z.string().uuid() })),
     async (c) => {
       try {
-        const authError = requireAuth(c);
-        if (authError) return authError();
-
         const { id } = c.req.valid("param");
         const result = await modelService.deleteModel({ id });
         return c.json(result, 200);
@@ -132,12 +122,10 @@ export const modelRoutes = new Hono()
    */
   .patch(
     "/bulk-publish",
+    isAuth,
     zValidator("json", bulkUpdatePublishedSchema),
     async (c) => {
       try {
-        const authError = requireAuth(c);
-        if (authError) return authError();
-
         const data = c.req.valid("json");
         const result = await modelService.bulkUpdatePublished(data);
         return c.json(result, 200);
@@ -154,13 +142,11 @@ export const modelRoutes = new Hono()
    */
   .post(
     "/:id/profile-image",
+    isAuth,
     zValidator("param", z.object({ id: z.string().uuid() })),
     zValidator("form", uploadProfileImageSchema),
     async (c) => {
       try {
-        const authError = requireAuth(c);
-        if (authError) return authError();
-
         const { id } = c.req.valid("param");
         const data = c.req.valid("form");
 
@@ -185,13 +171,11 @@ export const modelRoutes = new Hono()
    */
   .post(
     "/:id/images",
+    isAuth,
     zValidator("param", z.object({ id: z.string().uuid() })),
     zValidator("form", uploadModelImageSchema),
     async (c) => {
       try {
-        const authError = requireAuth(c);
-        if (authError) return authError();
-
         const { id } = c.req.valid("param");
         const { file, type, order } = c.req.valid("form");
 
@@ -218,12 +202,10 @@ export const modelRoutes = new Hono()
    */
   .delete(
     "/images/:id",
+    isAuth,
     zValidator("param", z.object({ id: z.string().uuid() })),
     async (c) => {
       try {
-        const authError = requireAuth(c);
-        if (authError) return authError();
-
         const { id } = c.req.valid("param");
         const result = await modelService.deletePortfolioImage({ id });
         return c.json(result, 200);
@@ -243,13 +225,11 @@ export const modelRoutes = new Hono()
    */
   .patch(
     "/:id/images/reorder",
+    isAuth,
     zValidator("param", z.object({ id: z.string().uuid() })),
     zValidator("json", reorderModelImagesSchema.omit({ modelId: true })),
     async (c) => {
       try {
-        const authError = requireAuth(c);
-        if (authError) return authError();
-
         const { id } = c.req.valid("param");
         const data = c.req.valid("json");
         const result = await modelService.reorderPortfolioImages({
@@ -271,11 +251,8 @@ export const modelRoutes = new Hono()
    * PATCH /api/models/revalidate/listing
    * Revalidate model listing cache (["models"] tag)
    */
-  .patch("/revalidate/listing", async (c) => {
+  .patch("/revalidate/listing", isAuth, async (c) => {
     try {
-      const authError = requireAuth(c);
-      if (authError) return authError();
-
       // Revalidate listing tag
       revalidateTag("models", "max");
 
@@ -292,11 +269,8 @@ export const modelRoutes = new Hono()
    * PATCH /api/models/revalidate/all-profiles
    * Revalidate all model profile caches (["model"] tag)
    */
-  .patch("/revalidate/all-profiles", async (c) => {
+  .patch("/revalidate/all-profiles", isAuth, async (c) => {
     try {
-      const authError = requireAuth(c);
-      if (authError) return authError();
-
       // Revalidate all model profiles by invalidating the generic "model" tag
       revalidateTag("model", "max");
 
@@ -316,11 +290,8 @@ export const modelRoutes = new Hono()
    * PATCH /api/models/revalidate/all
    * Revalidate both listing and all profile caches
    */
-  .patch("/revalidate/all", async (c) => {
+  .patch("/revalidate/all", isAuth, async (c) => {
     try {
-      const authError = requireAuth(c);
-      if (authError) return authError();
-
       // Revalidate both listing and all profiles
       revalidateTag("models", "max");
       revalidateTag("model", "max");
@@ -338,12 +309,10 @@ export const modelRoutes = new Hono()
    */
   .patch(
     "/:id/revalidate",
+    isAuth,
     zValidator("param", z.object({ id: z.string().uuid() })),
     async (c) => {
       try {
-        const authError = requireAuth(c);
-        if (authError) return authError();
-
         const { id } = c.req.valid("param");
 
         // Revalidate specific model profile by ID only
@@ -366,12 +335,10 @@ export const modelRoutes = new Hono()
    */
   .patch(
     "/revalidate/bulk",
+    isAuth,
     zValidator("json", bulkRevalidateSchema),
     async (c) => {
       try {
-        const authError = requireAuth(c);
-        if (authError) return authError();
-
         const { ids } = c.req.valid("json");
 
         // Revalidate each specific model ID only

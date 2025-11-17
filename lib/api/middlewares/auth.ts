@@ -38,7 +38,7 @@ type AuthVariables = {
  * Auth middleware that retrieves session and stores user/session in context
  *
  * This middleware does NOT block requests - it simply adds user/session to context.
- * Use requireAuth() helper in route handlers to enforce authentication.
+ * Use isAuth middleware on routes that require authentication.
  */
 export const authMiddleware = createMiddleware<{ Variables: AuthVariables }>(
   async (c, next) => {
@@ -48,6 +48,37 @@ export const authMiddleware = createMiddleware<{ Variables: AuthVariables }>(
     // Store user and session in context (null if not authenticated)
     c.set("user", session?.user ?? null);
     c.set("session", session?.session ?? null);
+
+    await next();
+  },
+);
+
+/**
+ * Auth guard middleware that ensures a request is authenticated
+ *
+ * This middleware checks if user and session exist in context.
+ * If authentication fails, it responds with 401 Unauthorized and stops execution.
+ *
+ * Usage:
+ * ```typescript
+ * import { isAuth } from '@/lib/api/middlewares/auth'
+ *
+ * export const routes = new Hono()
+ *   .get('/public', (c) => c.json({ message: 'Public route' }))
+ *   .post('/protected', isAuth, (c) => {
+ *     const user = c.var.user // Guaranteed to exist
+ *     return c.json({ user })
+ *   })
+ * ```
+ */
+export const isAuth = createMiddleware<{ Variables: AuthVariables }>(
+  async (c, next) => {
+    const user = c.get("user");
+    const session = c.get("session");
+
+    if (!user || !session) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
 
     await next();
   },
