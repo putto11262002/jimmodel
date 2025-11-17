@@ -6,6 +6,7 @@
  */
 
 import * as formSubmissionService from "@/lib/core/form-submissions/service";
+import { requireAuth } from "@/lib/api/utils/auth";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -22,11 +23,8 @@ export const formSubmissionRoutes = new Hono()
    */
   .get("/subjects", async (c) => {
     try {
-      // TODO: Check authentication - admin only
-      // const session = await getServerSession(authOptions);
-      // if (!session?.user?.isAdmin) {
-      //   return c.json({ error: 'Unauthorized' }, 401);
-      // }
+      const authError = requireAuth(c);
+      if (authError) return authError();
 
       const subjects = await formSubmissionService.getUniqueSubjects();
       return c.json({ subjects }, 200);
@@ -42,11 +40,8 @@ export const formSubmissionRoutes = new Hono()
    */
   .get("/", zValidator("query", listFormSubmissionsQuerySchema), async (c) => {
     try {
-      // TODO: Check authentication - admin only
-      // const session = await getServerSession(authOptions);
-      // if (!session?.user?.isAdmin) {
-      //   return c.json({ error: 'Unauthorized' }, 401);
-      // }
+      const authError = requireAuth(c);
+      if (authError) return authError();
 
       const query = c.req.valid("query");
       const result = await formSubmissionService.listFormSubmissions(query);
@@ -66,11 +61,8 @@ export const formSubmissionRoutes = new Hono()
     zValidator("param", z.object({ id: z.string().uuid() })),
     async (c) => {
       try {
-        // TODO: Check authentication - admin only
-        // const session = await getServerSession(authOptions);
-        // if (!session?.user?.isAdmin) {
-        //   return c.json({ error: 'Unauthorized' }, 401);
-        // }
+        const authError = requireAuth(c);
+        if (authError) return authError();
 
         const { id } = c.req.valid("param");
         const result = await formSubmissionService.getFormSubmission({ id });
@@ -95,11 +87,8 @@ export const formSubmissionRoutes = new Hono()
     zValidator("json", updateFormSubmissionStatusSchema),
     async (c) => {
       try {
-        // TODO: Check authentication - admin only
-        // const session = await getServerSession(authOptions);
-        // if (!session?.user?.isAdmin) {
-        //   return c.json({ error: 'Unauthorized' }, 401);
-        // }
+        const authError = requireAuth(c);
+        if (authError) return authError();
 
         const { id } = c.req.valid("param");
         const { status } = c.req.valid("json");
@@ -129,11 +118,8 @@ export const formSubmissionRoutes = new Hono()
     zValidator("param", z.object({ id: z.string().uuid() })),
     async (c) => {
       try {
-        // TODO: Check authentication - admin only
-        // const session = await getServerSession(authOptions);
-        // if (!session?.user?.isAdmin) {
-        //   return c.json({ error: 'Unauthorized' }, 401);
-        // }
+        const authError = requireAuth(c);
+        if (authError) return authError();
 
         const { id } = c.req.valid("param");
         const result = await formSubmissionService.deleteFormSubmission({ id });
@@ -161,11 +147,8 @@ export const formSubmissionRoutes = new Hono()
     zValidator("json", bulkDeleteFormSubmissionsSchema),
     async (c) => {
       try {
-        // TODO: Check authentication - admin only
-        // const session = await getServerSession(authOptions);
-        // if (!session?.user?.isAdmin) {
-        //   return c.json({ error: 'Unauthorized' }, 401);
-        // }
+        const authError = requireAuth(c);
+        if (authError) return authError();
 
         const { ids } = c.req.valid("json");
         const result = await formSubmissionService.bulkDeleteFormSubmissions({

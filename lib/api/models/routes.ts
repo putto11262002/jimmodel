@@ -6,6 +6,7 @@
  */
 
 import * as modelService from "@/lib/core/models/service";
+import { requireAuth } from "@/lib/api/utils/auth";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { revalidateTag } from "next/cache";
@@ -36,11 +37,8 @@ export const modelRoutes = new Hono()
   })
   .post("/", zValidator("json", createModelSchema), async (c) => {
     try {
-      // TODO: Check authentication
-      // const session = await getServerSession(authOptions);
-      // if (!session?.user?.id) {
-      //   return c.json({ error: 'Unauthorized' }, 401);
-      // }
+      const authError = requireAuth(c);
+      if (authError) return authError();
 
       const data = c.req.valid("json");
       const result = await modelService.createModel(data);
@@ -60,11 +58,8 @@ export const modelRoutes = new Hono()
     zValidator("param", z.object({ id: z.string().uuid() })),
     async (c) => {
       try {
-        // TODO: Check authentication
-        // const session = await getServerSession(authOptions);
-        // if (!session?.user?.id) {
-        //   return c.json({ error: 'Unauthorized' }, 401);
-        // }
+        const authError = requireAuth(c);
+        if (authError) return authError();
 
         const { id } = c.req.valid("param");
         const result = await modelService.getModel({ id });
@@ -89,11 +84,8 @@ export const modelRoutes = new Hono()
     zValidator("json", updateModelSchema),
     async (c) => {
       try {
-        // TODO: Check authentication
-        // const session = await getServerSession(authOptions);
-        // if (!session?.user?.id) {
-        //   return c.json({ error: 'Unauthorized' }, 401);
-        // }
+        const authError = requireAuth(c);
+        if (authError) return authError();
 
         const { id } = c.req.valid("param");
         const data = c.req.valid("json");
@@ -118,11 +110,8 @@ export const modelRoutes = new Hono()
     zValidator("param", z.object({ id: z.string().uuid() })),
     async (c) => {
       try {
-        // TODO: Check authentication
-        // const session = await getServerSession(authOptions);
-        // if (!session?.user?.id) {
-        //   return c.json({ error: 'Unauthorized' }, 401);
-        // }
+        const authError = requireAuth(c);
+        if (authError) return authError();
 
         const { id } = c.req.valid("param");
         const result = await modelService.deleteModel({ id });
@@ -146,11 +135,8 @@ export const modelRoutes = new Hono()
     zValidator("json", bulkUpdatePublishedSchema),
     async (c) => {
       try {
-        // TODO: Check authentication
-        // const session = await getServerSession(authOptions);
-        // if (!session?.user?.id) {
-        //   return c.json({ error: 'Unauthorized' }, 401);
-        // }
+        const authError = requireAuth(c);
+        if (authError) return authError();
 
         const data = c.req.valid("json");
         const result = await modelService.bulkUpdatePublished(data);
@@ -172,11 +158,8 @@ export const modelRoutes = new Hono()
     zValidator("form", uploadProfileImageSchema),
     async (c) => {
       try {
-        // TODO: Check authentication
-        // const session = await getServerSession(authOptions);
-        // if (!session?.user?.id) {
-        //   return c.json({ error: 'Unauthorized' }, 401);
-        // }
+        const authError = requireAuth(c);
+        if (authError) return authError();
 
         const { id } = c.req.valid("param");
         const data = c.req.valid("form");
@@ -206,11 +189,8 @@ export const modelRoutes = new Hono()
     zValidator("form", uploadModelImageSchema),
     async (c) => {
       try {
-        // TODO: Check authentication
-        // const session = await getServerSession(authOptions);
-        // if (!session?.user?.id) {
-        //   return c.json({ error: 'Unauthorized' }, 401);
-        // }
+        const authError = requireAuth(c);
+        if (authError) return authError();
 
         const { id } = c.req.valid("param");
         const { file, type, order } = c.req.valid("form");
@@ -241,11 +221,8 @@ export const modelRoutes = new Hono()
     zValidator("param", z.object({ id: z.string().uuid() })),
     async (c) => {
       try {
-        // TODO: Check authentication
-        // const session = await getServerSession(authOptions);
-        // if (!session?.user?.id) {
-        //   return c.json({ error: 'Unauthorized' }, 401);
-        // }
+        const authError = requireAuth(c);
+        if (authError) return authError();
 
         const { id } = c.req.valid("param");
         const result = await modelService.deletePortfolioImage({ id });
@@ -270,11 +247,8 @@ export const modelRoutes = new Hono()
     zValidator("json", reorderModelImagesSchema.omit({ modelId: true })),
     async (c) => {
       try {
-        // TODO: Check authentication
-        // const session = await getServerSession(authOptions);
-        // if (!session?.user?.id) {
-        //   return c.json({ error: 'Unauthorized' }, 401);
-        // }
+        const authError = requireAuth(c);
+        if (authError) return authError();
 
         const { id } = c.req.valid("param");
         const data = c.req.valid("json");
@@ -299,11 +273,8 @@ export const modelRoutes = new Hono()
    */
   .patch("/revalidate/listing", async (c) => {
     try {
-      // TODO: Check authentication
-      // const session = await getServerSession(authOptions);
-      // if (!session?.user?.id) {
-      //   return c.json({ error: 'Unauthorized' }, 401);
-      // }
+      const authError = requireAuth(c);
+      if (authError) return authError();
 
       // Revalidate listing tag
       revalidateTag("models", "max");
@@ -323,11 +294,8 @@ export const modelRoutes = new Hono()
    */
   .patch("/revalidate/all-profiles", async (c) => {
     try {
-      // TODO: Check authentication
-      // const session = await getServerSession(authOptions);
-      // if (!session?.user?.id) {
-      //   return c.json({ error: 'Unauthorized' }, 401);
-      // }
+      const authError = requireAuth(c);
+      if (authError) return authError();
 
       // Revalidate all model profiles by invalidating the generic "model" tag
       revalidateTag("model", "max");
@@ -350,11 +318,8 @@ export const modelRoutes = new Hono()
    */
   .patch("/revalidate/all", async (c) => {
     try {
-      // TODO: Check authentication
-      // const session = await getServerSession(authOptions);
-      // if (!session?.user?.id) {
-      //   return c.json({ error: 'Unauthorized' }, 401);
-      // }
+      const authError = requireAuth(c);
+      if (authError) return authError();
 
       // Revalidate both listing and all profiles
       revalidateTag("models", "max");
@@ -376,11 +341,8 @@ export const modelRoutes = new Hono()
     zValidator("param", z.object({ id: z.string().uuid() })),
     async (c) => {
       try {
-        // TODO: Check authentication
-        // const session = await getServerSession(authOptions);
-        // if (!session?.user?.id) {
-        //   return c.json({ error: 'Unauthorized' }, 401);
-        // }
+        const authError = requireAuth(c);
+        if (authError) return authError();
 
         const { id } = c.req.valid("param");
 
@@ -407,11 +369,8 @@ export const modelRoutes = new Hono()
     zValidator("json", bulkRevalidateSchema),
     async (c) => {
       try {
-        // TODO: Check authentication
-        // const session = await getServerSession(authOptions);
-        // if (!session?.user?.id) {
-        //   return c.json({ error: 'Unauthorized' }, 401);
-        // }
+        const authError = requireAuth(c);
+        if (authError) return authError();
 
         const { ids } = c.req.valid("json");
 
