@@ -1,11 +1,11 @@
 "use client";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import React from "react";
-import { CreateModelDialogProvider } from "./@header/models/_components/create-model-dialog";
 import { useSession } from "@/hooks/queries/auth/use-session";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Loader2, ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import React, { useEffect } from "react";
+import { CreateModelDialogProvider } from "./@header/models/_components/create-model-dialog";
 
 /**
  * Client-side authentication guard
@@ -15,22 +15,28 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   const { data, isPending } = useSession();
   const router = useRouter();
 
+  useEffect(() => {
+    if (!data?.session && !isPending) {
+      router.push("/signin");
+    }
+  }, [data]);
+
   // Show loading state during session check
   if (isPending || !data) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="flex flex-col items-center gap-2">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">Loading...</p>
+      <div className="flex h-screen w-screen fixed top-0 left-0 z-10 items-center justify-center bg-background">
+        <div className="flex flex-col items-center justify-center text-center">
+          <div className="rounded-full bg-muted p-3 mb-4">
+            <ShieldCheck className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-semibold mb-2">Verifying access</h3>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>Checking authentication...</span>
+          </div>
         </div>
       </div>
     );
-  }
-
-  // Redirect to signin if not authenticated
-  if (!data.session || !data.user) {
-    router.push("/signin");
-    return null;
   }
 
   // User is authenticated, render children
