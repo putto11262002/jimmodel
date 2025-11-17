@@ -1,10 +1,11 @@
 "use client";
 
+import { Toaster } from "@/components/ui/sonner";
 import { useSession } from "@/hooks/queries/auth/use-session";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Loader2, ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
-import React, { useEffect } from "react";
+import { Suspense, useEffect } from "react";
+import { AdminSidebar } from "./_components/admin-sidebar";
 import { CreateModelDialogProvider } from "./@header/models/_components/create-model-dialog";
 
 /**
@@ -17,9 +18,9 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!data?.session && !isPending) {
-      router.push("/signin");
+      router.push("/admin/signin");
     }
-  }, [data]);
+  }, [data, isPending, router]);
 
   // Show loading state during session check
   if (isPending || !data) {
@@ -43,28 +44,35 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-export default function Providers({ children }: { children: React.ReactNode }) {
-  const [queryClient] = React.useState(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            staleTime: 1000 * 60 * 5, // 5 minutes
-            refetchOnWindowFocus: true,
-            retry: 1,
-          },
-          mutations: {
-            retry: 0,
-          },
-        },
-      }),
-  );
-
+export default function AdminLayout({
+  header,
+  content,
+}: {
+  header: React.ReactNode;
+  content: React.ReactNode;
+}) {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthGuard>
-        <CreateModelDialogProvider>{children}</CreateModelDialogProvider>
-      </AuthGuard>
-    </QueryClientProvider>
+    <AuthGuard>
+      <CreateModelDialogProvider>
+        <div className="flex h-screen">
+          <Suspense>
+            <AdminSidebar />
+          </Suspense>
+          <div className="flex-1 flex flex-col bg-background">
+            <header className="sticky top-0 z-10 border-b bg-background">
+              <div className="container mx-auto px-4 md:px-6 lg:px-8 py-4">
+                {header}
+              </div>
+            </header>
+            <main className="flex-1 overflow-y-auto">
+              <div className="container mx-auto px-4 md:px-6 lg:px-8 py-6">
+                <Suspense>{content}</Suspense>
+              </div>
+            </main>
+          </div>
+          <Toaster position="top-right" />
+        </div>
+      </CreateModelDialogProvider>
+    </AuthGuard>
   );
 }
