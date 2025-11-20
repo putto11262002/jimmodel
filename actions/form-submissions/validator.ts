@@ -5,13 +5,15 @@
  * Used at the platform boundary (server actions).
  */
 
-import { z } from "zod";
 import { FORM_SUBMISSION_SUBJECTS } from "@/lib/data/form-submission-subjects";
+import { z } from "zod";
 
 /**
  * Contact form subject categories enum (Zod)
  */
-export const contactSubjectEnum = z.enum(FORM_SUBMISSION_SUBJECTS);
+export const contactSubjectEnum = z.enum(FORM_SUBMISSION_SUBJECTS, {
+  message: "Please select a subject category",
+});
 
 /**
  * Re-export the subjects array for UI components
@@ -23,7 +25,8 @@ export const contactSubjects = FORM_SUBMISSION_SUBJECTS;
  * Allows various formats: (123) 456-7890, 123-456-7890, 123.456.7890, 1234567890
  * Also accepts international formats with + prefix
  */
-const phoneRegex = /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/;
+const phoneRegex =
+  /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/;
 
 /**
  * Submit contact form schema
@@ -42,13 +45,13 @@ export const submitContactFormSchema = z.object({
     .string()
     .refine(
       (val) => val === "" || phoneRegex.test(val),
-      "Please enter a valid phone number (e.g., +1 (555) 000-0000)"
+      "Please enter a valid phone number (e.g., +1 (555) 000-0000)",
     )
     .optional()
     .nullable(),
   subject: contactSubjectEnum.refine(
     (val) => val && val.length > 0,
-    "Please select a subject category"
+    "Please select a subject category",
   ),
   message: z
     .string()

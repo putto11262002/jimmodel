@@ -1,265 +1,158 @@
-"use client";
-
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { submitContactFormSchema, type SubmitContactFormInput } from "@/actions/form-submissions/validator";
-import { submitContactForm } from "@/actions/form-submissions/action";
-import { FORM_SUBMISSION_SUBJECTS } from "@/lib/data/form-submission-subjects";
-import { Button } from "@/components/ui/button";
+import { cacheComponentConfig } from "@/config/cache-component";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { toast } from "sonner";
-import { Loader2, Mail, MapPin, Phone, Instagram, Facebook, Linkedin, Youtube } from "lucide-react";
-import { motion } from "framer-motion";
+  Facebook,
+  Instagram,
+  Linkedin,
+  Mail,
+  Phone,
+  Youtube,
+} from "lucide-react";
+import type { Metadata } from "next";
+import { cacheLife, cacheTag } from "next/cache";
+import { ContactForm } from "./_components/form";
 
-export default function ContactPage() {
-  const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+/**
+ * SEO Metadata for Contact Page
+ * Includes title, description, Open Graph, and structured data
+ */
+export const metadata: Metadata = {
+  title: "Get in Touch",
+  description:
+    "Contact J.I.M. Modeling Agency in Bangkok, Thailand. Reach out for talent representation, casting inquiries, and modeling opportunities.",
+  keywords: [
+    "contact J.I.M. modeling",
+    "modeling agency Bangkok",
+    "casting contact",
+    "modeling opportunities Thailand",
+    "talent representation",
+  ],
+  openGraph: {
+    title: "Contact J.I.M. Modeling Agency - Get in Touch",
+    description:
+      "Get in touch with Thailand's premier modeling agency. Contact us for talent representation, bookings, and inquiries.",
+    type: "website",
+    url: "https://www.jimmodel.com/contact",
+    siteName: "J.I.M. Modeling Agency",
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "J.I.M. Modeling Agency Contact",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Contact J.I.M. Modeling Agency",
+    description:
+      "Get in touch with Thailand's premier modeling agency for talent and casting inquiries.",
+    creator: "@jim_model",
+  },
+};
 
-  const form = useForm<SubmitContactFormInput>({
-    resolver: zodResolver(submitContactFormSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      phone: "",
-      message: "",
-    },
-  });
-
-  async function onSubmit(values: SubmitContactFormInput) {
-    setIsSubmitting(true);
-
-    try {
-      const result = await submitContactForm(values);
-
-      if (result.success) {
-        router.push("/contact/success");
-      } else {
-        toast.error("Failed to send message", {
-          description: result.error.message,
-        });
-        setIsSubmitting(false);
-      }
-    } catch (error) {
-      toast.error("An unexpected error occurred", {
-        description: "Please try again later.",
-      });
-      setIsSubmitting(false);
-    }
-  }
-
+export default async function ContactPage() {
+  "use cache";
+  cacheLife(cacheComponentConfig.aboutPage.profile);
+  cacheTag(...cacheComponentConfig.aboutPage.tag);
   return (
     <>
       <main className="w-full bg-background">
         {/* Contact Form Section */}
-        <div className="container mx-auto max-w-2xl px-4 py-16">
+        <section
+          className="container mx-auto max-w-2xl px-4 py-16"
+          aria-labelledby="contact-form-title"
+        >
           <div className="mb-8 text-center">
-            <h1 className="mb-4 text-4xl font-bold tracking-tight">Get in Touch</h1>
+            <h1
+              id="contact-form-title"
+              className="mb-4 font-light text-4xl font-bold tracking-tight"
+            >
+              Get in Touch
+            </h1>
             <p className="text-lg text-muted-foreground">
-              Have a question or want to work together? We&apos;d love to hear from you.
+              Have a question or want to work together? We&apos;d love to hear
+              from you.
             </p>
           </div>
 
-          <div className="rounded-lg border bg-card p-8 shadow-sm">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Name</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Your name"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="email"
-                          placeholder="your.email@example.com"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Phone (optional)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="tel"
-                          placeholder="+1 (555) 000-0000"
-                          {...field}
-                          value={field.value || ""}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="subject"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Subject</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select a subject category" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {FORM_SUBMISSION_SUBJECTS.map((subject) => (
-                            <SelectItem key={subject} value={subject}>
-                              {subject}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="message"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Message</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Tell us more about your inquiry..."
-                          className="min-h-[150px] resize-none"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <Button
-                  type="submit"
-                  className="w-full"
-                  size="lg"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Sending...
-                    </>
-                  ) : (
-                    <>
-                      <Mail className="mr-2 h-4 w-4" />
-                      Send Message
-                    </>
-                  )}
-                </Button>
-              </form>
-            </Form>
-          </div>
-        </div>
+          <ContactForm />
+        </section>
 
         {/* Visit Our Office Section */}
-        <section className="w-full py-16 lg:py-24 px-6 sm:px-8 border-t border-border">
+        <section
+          className="w-full py-16 lg:py-24 px-6 sm:px-8 border-t border-border"
+          aria-labelledby="office-section-title"
+        >
           <div className="max-w-3xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
+            <h2
+              id="office-section-title"
+              className="text-3xl lg:text-4xl font-light text-center mb-12"
             >
-              <h2 className="text-3xl lg:text-4xl font-serif font-light text-center mb-12">
-                Visit Our Office
-              </h2>
-            </motion.div>
+              Visit Our Office
+            </h2>
 
             {/* Contact Info + Map Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
               {/* Contact Info */}
-              <div>
-                <h3 className="text-lg font-semibold text-foreground mb-6">
+              <address className="not-italic">
+                <h3 className="text-lg text-foreground mb-6">
                   Contact Information
                 </h3>
                 <div className="space-y-4 mb-8">
-                  <p className="flex gap-3">
-                    <MapPin className="w-5 h-5 flex-shrink-0 text-primary mt-0.5" />
-                    <span className="text-muted-foreground">
-                      1201/5 Town in town soi 2, Phlabphla, Wang Thonglang,
-                      Bangkok, 10310, Thailand
-                    </span>
-                  </p>
-                  <p className="flex gap-3">
-                    <Phone className="w-5 h-5 flex-shrink-0 text-primary mt-0.5" />
+                  <div className="flex gap-3">
+                    <Phone
+                      className="w-5 h-5 flex-shrink-0 text-primary mt-0.5"
+                      aria-hidden="true"
+                    />
                     <a
                       href="tel:+66815565126"
                       className="text-muted-foreground hover:text-foreground transition-colors"
                     >
                       +66 81-556-5126
                     </a>
-                  </p>
-                  <p className="flex gap-3">
-                    <Mail className="w-5 h-5 flex-shrink-0 text-primary mt-0.5" />
+                  </div>
+                  <div className="flex gap-3">
+                    <Mail
+                      className="w-5 h-5 flex-shrink-0 text-primary mt-0.5"
+                      aria-hidden="true"
+                    />
                     <a
                       href="mailto:jim@jimmodel.com"
                       className="text-muted-foreground hover:text-foreground transition-colors"
                     >
                       jim@jimmodel.com
                     </a>
-                  </p>
+                  </div>
                 </div>
 
                 {/* Social Icons */}
                 <div>
-                  <p className="text-sm font-medium text-foreground mb-3">
+                  <h4 className="text-lg text-foreground mb-3">
                     Connect With Us
-                  </p>
-                  <div className="flex gap-4">
+                  </h4>
+                  <nav aria-label="Social media links" className="flex gap-4">
                     {[
-                      { icon: Instagram, href: "https://instagram.com/jim_model", label: "Instagram" },
-                      { icon: Facebook, href: "https://facebook.com/jimmodeling", label: "Facebook" },
-                      { icon: Youtube, href: "https://youtube.com/@jimmodeling", label: "YouTube" },
-                      { icon: Linkedin, href: "https://linkedin.com/company/jim-modeling", label: "LinkedIn" },
+                      {
+                        icon: Instagram,
+                        href: "https://instagram.com/jim_model",
+                        label: "Instagram",
+                      },
+                      {
+                        icon: Facebook,
+                        href: "https://facebook.com/jimmodeling",
+                        label: "Facebook",
+                      },
+                      {
+                        icon: Youtube,
+                        href: "https://youtube.com/@jimmodeling",
+                        label: "YouTube",
+                      },
+                      {
+                        icon: Linkedin,
+                        href: "https://linkedin.com/company/jim-modeling",
+                        label: "LinkedIn",
+                      },
                     ].map((social) => {
                       const Icon = social.icon;
                       return (
@@ -269,15 +162,16 @@ export default function ContactPage() {
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label={`Follow us on ${social.label}`}
-                          className="group inline-flex items-center justify-center w-10 h-10 rounded-lg bg-secondary/50 text-foreground hover:bg-primary hover:text-primary-foreground transition-all duration-300 hover:scale-110"
+                          className="group inline-flex items-center justify-center w-10 h-10 rounded-lg text-foreground hover:bg-primary/10 transition-colors"
+                          title={`J.I.M. Modeling Agency on ${social.label}`}
                         >
-                          <Icon className="w-5 h-5" />
+                          <Icon className="w-5 h-5" aria-hidden="true" />
                         </a>
                       );
                     })}
-                  </div>
+                  </nav>
                 </div>
-              </div>
+              </address>
 
               {/* Google Maps Embed */}
               <div className="w-full h-96 rounded-lg overflow-hidden border border-border">
@@ -304,11 +198,15 @@ export default function ContactPage() {
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "LocalBusiness",
+              "@id": "https://www.jimmodel.com",
               name: "J.I.M. Modeling Agency",
-              url: "https://jimmodel.com",
-              logo: "https://jimmodel.com/logo.svg",
+              alternateName: "JIM Modeling",
+              url: "https://www.jimmodel.com",
+              contactUrl: "https://www.jimmodel.com/contact",
+              logo: "https://www.jimmodel.com/logo.svg",
               description:
-                "Thailand's premier modeling agency with 40+ years of experience. Contact for talent representation and bookings.",
+                "Thailand's premier modeling agency with 40+ years of experience. Professional talent representation, casting services, and model management for fashion, TV, and media projects.",
+              image: "https://www.jimmodel.com/og-image.jpg",
               telephone: "+66-81-556-5126",
               email: "jim@jimmodel.com",
               address: {
@@ -318,8 +216,31 @@ export default function ContactPage() {
                 addressLocality: "Bangkok",
                 postalCode: "10310",
                 addressCountry: "TH",
+                addressRegion: "Bangkok",
+              },
+              geo: {
+                "@type": "GeoCoordinates",
+                latitude: "13.770449686707447",
+                longitude: "100.73728592346917",
               },
               foundingDate: "1984",
+              areaServed: {
+                "@type": "Country",
+                name: "Thailand",
+              },
+              sameAs: [
+                "https://instagram.com/jim_model",
+                "https://facebook.com/jimmodeling",
+                "https://youtube.com/@jimmodeling",
+                "https://linkedin.com/company/jim-modeling",
+              ],
+              contactPoint: {
+                "@type": "ContactPoint",
+                contactType: "Customer Support",
+                telephone: "+66-81-556-5126",
+                email: "jim@jimmodel.com",
+                contactOption: "TollFree",
+              },
             }),
           }}
         />
