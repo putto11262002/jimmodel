@@ -22,6 +22,14 @@ export const cacheComponentConfig = {
       expire: DAY * 35,
     },
   },
+  ladingPage: {
+    tag: ["landing"],
+    profile: {
+      stale: HOUR,
+      revalidate: DAY * 7,
+      expire: DAY * 30,
+    },
+  },
 } as const;
 
 type CacheProfiles = {
