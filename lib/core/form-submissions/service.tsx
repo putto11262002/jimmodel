@@ -7,6 +7,8 @@
 import { db } from "@/db";
 import { formSubmissions } from "@/db/schema";
 import { createPaginatedResult } from "@/lib/types/common";
+import { sendEmail, type EmailSendResult } from "@/lib/core/email/service";
+import { ContactFormNotificationEmail, type ContactFormEmailData } from "@/lib/core/form-submissions/email-templates";
 import { and, count, desc, eq, inArray } from "drizzle-orm";
 import type {
   BulkDeleteFormSubmissionsInput,
@@ -18,10 +20,69 @@ import type {
 } from "./types";
 
 /**
+ * Send contact form notification email to admin recipients
+ * This is a non-blocking operation - errors are logged but don't throw
+ */
+export async function sendContactFormNotificationToAdmins(
+  formData: ContactFormEmailData,
+  options?: {
+    subject?: string;
+    additionalRecipients?: string[];
+  },
+): Promise<EmailSendResult> {
+  // Get admin notification emails from environment
+  const adminEmails = process.env.ADMIN_NOTIFICATION_EMAILS?.split(",").map(email => email.trim()).filter(Boolean);
+
+  if (!adminEmails || adminEmails.length === 0) {
+    console.log("Email sending skipped: ADMIN_NOTIFICATION_EMAILS not configured");
+    return {
+      success: false,
+      error: "No admin notification emails configured",
+    };
+  }
+
+  const recipients = [
+    ...adminEmails,
+    ...(options?.additionalRecipients || []),
+  ];
+
+  if (recipients.length === 0) {
+    return {
+      success: false,
+      error: "No recipients available",
+    };
+  }
+
+  // Build from address from environment variables
+  const fromEmail = process.env.FROM_EMAIL;
+  const fromName = process.env.FROM_NAME;
+
+  if (!fromEmail || !fromName) {
+    console.warn("Email sending skipped: FROM_EMAIL and FROM_NAME environment variables not configured");
+    return {
+      success: false,
+      error: "Email configuration incomplete - FROM_EMAIL and FROM_NAME required",
+    };
+  }
+
+  const fromAddress = `${fromName} <${fromEmail}>`;
+
+  return sendEmail({
+    from: fromAddress,
+    to: recipients,
+    subject: options?.subject || `New Contact Form: ${formData.subject}`,
+    replyTo: formData.email,
+    react: <ContactFormNotificationEmail formData={formData} />,
+  });
+}
+
+/**
  * Submit a contact form (public)
  * Creates a new form submission record with status "new"
+ * Sends email notification to admin recipients after successful save
  */
 export async function submitContactForm(input: SubmitContactFormInput) {
+  // Save form submission to database
   const [submission] = await db
     .insert(formSubmissions)
     .values({
@@ -33,6 +94,25 @@ export async function submitContactForm(input: SubmitContactFormInput) {
       status: "new",
     })
     .returning();
+
+  // Send email notification to admins (non-blocking)
+  // This runs in the background and doesn't affect form submission success
+  try {
+    await sendContactFormNotificationToAdmins({
+      name: submission.name,
+      email: submission.email,
+      phone: submission.phone,
+      subject: submission.subject,
+      message: submission.message,
+      submittedAt: submission.createdAt,
+    }).catch((error) => {
+      // Log email error but don't fail the form submission
+      console.error("Failed to send contact form notification email:", error);
+    });
+  } catch (error) {
+    // Log any unexpected errors but don't fail the form submission
+    console.error("Unexpected error sending contact form notification email:", error);
+  }
 
   return submission;
 }
