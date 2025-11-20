@@ -1,6 +1,7 @@
 const MINUTE = 60;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
+const WEEK = 7 * DAY;
 
 // Tag can be either string[] or (...) => string[]
 // use pural for collection
@@ -28,6 +29,14 @@ export const cacheComponentConfig = {
       stale: HOUR,
       revalidate: DAY * 7,
       expire: DAY * 30,
+    },
+  },
+  aboutPage: {
+    tag: ["about"],
+    profile: {
+      stale: HOUR,
+      revalidate: WEEK * 4,
+      expire: WEEK * 8,
     },
   },
 } as const;
