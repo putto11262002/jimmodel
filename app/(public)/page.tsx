@@ -1,44 +1,26 @@
-import { About } from "@/app/(public)/_components/about";
-import { Cta } from "@/app/(public)/_components/cta";
-import { FeaturedModels } from "@/app/(public)/_components/featured-models";
-import { FeaturedModelsSkeleton } from "@/app/(public)/_components/featured-models-skeleton";
+import { DualCta } from "@/app/(public)/_components/dual-cta";
 import { Footer } from "@/app/(public)/_components/footer";
 import { Hero } from "@/app/(public)/_components/hero";
-import { Portfolio } from "@/app/(public)/_components/portfolio";
-import { listModels } from "@/lib/core/models/service";
-import { cacheLife } from "next/cache";
-import { Suspense } from "react";
+import { PortfolioShowcase } from "@/app/(public)/_components/portfolio-showcase";
+import { TrustIndicators } from "@/app/(public)/_components/trust-indicators";
+import { cacheComponentConfig } from "@/config/cache-component";
+import { cacheLife, cacheTag } from "next/cache";
+import { ModelBand } from "./_components/models-band";
 
-async function FeaturedModelsData() {
+export default async function LandingPage() {
   "use cache";
-  cacheLife("weeks");
-
-  // Fetch published models, sorted by creation date
-  // Fetching 20 models to split between two carousel rows (10 each)
-  const result = await listModels({
-    published: true,
-    page: 1,
-    limit: 20,
-    sortBy: "createdAt",
-    sortOrder: "desc",
-  });
-
-  return <FeaturedModels models={result.items} />;
-}
-
-export default function LandingPage() {
+  cacheLife(cacheComponentConfig.ladingPage.profile);
+  cacheTag(...cacheComponentConfig.ladingPage.tag);
   return (
-    <main className="w-full bg-white dark:bg-black overflow-hidden">
-      <Suspense>
-        <Hero />
-        <Suspense fallback={<FeaturedModelsSkeleton />}>
-          <FeaturedModelsData />
-        </Suspense>
-        <About />
-        <Portfolio />
-        <Cta />
-        <Footer />
-      </Suspense>
+    <main className="w-full bg-background">
+      <Hero />
+      <TrustIndicators />
+      <ModelBand />
+      <div className="hidden lg:block">
+        <PortfolioShowcase />
+      </div>
+      <DualCta />
+      <Footer />
     </main>
   );
 }

@@ -1,17 +1,17 @@
-"use client";
-
-import { Mail, Instagram, Linkedin, Twitter } from "lucide-react";
+import { Facebook, Instagram, Mail, Phone } from "lucide-react";
+import Link from "next/link";
+import { Logo } from "./logo";
 
 export function Footer() {
   return (
-    <footer className="w-full bg-background border-t border-border">
+    <footer className="w-full bg-background">
       <div className="max-w-7xl mx-auto px-6 sm:px-8 py-16">
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-12 mb-12">
           {/* Brand */}
           <div>
-            <h3 className="font-heading text-lg font-bold text-foreground mb-4">
-              JimModel
-            </h3>
+            <div className="mb-4">
+              <Logo size="md" showText={true} className="w-fit" />
+            </div>
             <p className="text-sm text-muted-foreground">
               Connecting exceptional talent with world-class opportunities
             </p>
@@ -24,71 +24,133 @@ export function Footer() {
             </h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <a href="#" className="hover:text-foreground transition-colors">
+                <Link
+                  href="/"
+                  className="hover:text-foreground transition-colors"
+                >
+                  Home
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/models"
+                  className="hover:text-foreground transition-colors"
+                >
                   Models
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="hover:text-foreground transition-colors">
-                  Gallery
-                </a>
+                <Link
+                  href="/about"
+                  className="hover:text-foreground transition-colors"
+                >
+                  About Us
+                </Link>
               </li>
               <li>
-                <a href="#" className="hover:text-foreground transition-colors">
-                  About
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-foreground transition-colors">
+                <Link
+                  href="/contact"
+                  className="hover:text-foreground transition-colors"
+                >
                   Contact
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
 
-          {/* For Models */}
+          {/* Talents */}
           <div>
             <h4 className="text-sm font-semibold text-foreground mb-4">
-              For Models
+              Talents
             </h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <a href="#" className="hover:text-foreground transition-colors">
-                  Apply Now
-                </a>
+                <Link
+                  href="/models/female"
+                  className="hover:text-foreground transition-colors"
+                >
+                  Female
+                </Link>
               </li>
               <li>
-                <a href="#" className="hover:text-foreground transition-colors">
-                  Requirements
-                </a>
+                <Link
+                  href="/models/male"
+                  className="hover:text-foreground transition-colors"
+                >
+                  Male
+                </Link>
               </li>
               <li>
-                <a href="#" className="hover:text-foreground transition-colors">
-                  Benefits
-                </a>
+                <Link
+                  href="/models/kids"
+                  className="hover:text-foreground transition-colors"
+                >
+                  Kids
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/models/seniors"
+                  className="hover:text-foreground transition-colors"
+                >
+                  Seniors
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/models/non-binary"
+                  className="hover:text-foreground transition-colors"
+                >
+                  Non-Binary
+                </Link>
               </li>
             </ul>
           </div>
 
-          {/* For Brands */}
+          {/* Contact */}
           <div>
             <h4 className="text-sm font-semibold text-foreground mb-4">
-              For Brands
+              Contact
             </h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li>
-                <a href="#" className="hover:text-foreground transition-colors">
-                  Hire Talent
+            <ul className="space-y-3 text-sm text-muted-foreground">
+              <li className="flex items-center gap-2">
+                <Phone className="w-4 h-4 flex-shrink-0" />
+                <a
+                  href="tel:+66815565126"
+                  className="hover:text-foreground transition-colors"
+                >
+                  +66 81-556-5126
                 </a>
               </li>
-              <li>
-                <a href="#" className="hover:text-foreground transition-colors">
-                  Services
+              <li className="flex items-center gap-2">
+                <Mail className="w-4 h-4 flex-shrink-0" />
+                <a
+                  href="mailto:jim@jimmodel.com"
+                  className="hover:text-foreground transition-colors"
+                >
+                  jim@jimmodel.com
                 </a>
               </li>
-              <li>
-                <a href="#" className="hover:text-foreground transition-colors">
-                  Pricing
+              <li className="flex items-center gap-2">
+                <Instagram className="w-4 h-4 flex-shrink-0" />
+                <a
+                  href="https://instagram.com/jim_model"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-foreground transition-colors"
+                >
+                  @jim_model
+                </a>
+              </li>
+              <li className="flex items-center gap-2">
+                <Facebook className="w-4 h-4 flex-shrink-0" />
+                <a
+                  href="https://facebook.com/jimmodeling"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-foreground transition-colors"
+                >
+                  jimmodeling
                 </a>
               </li>
             </ul>
@@ -99,43 +161,14 @@ export function Footer() {
         <div className="h-px bg-border mb-12" />
 
         {/* Bottom Section */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div className="flex items-center justify-center gap-4 flex-col text-left lg:text-center">
+          <p className="text-sm text-muted-foreground ">
+            1201/5 Town in town soi 2, Phlabphla, Wang Thonglang, Bangkok, 10310
+          </p>
           {/* Copyright */}
           <p className="text-sm text-muted-foreground">
-            © 2024 JimModel Agency. All rights reserved.
+            © 2024 J.I.M. Modeling Agency. All rights reserved.
           </p>
-
-          {/* Social Links */}
-          <div className="flex items-center gap-6">
-            <a
-              href="mailto:contact@jimmodel.com"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-              aria-label="Email"
-            >
-              <Mail className="w-5 h-5" />
-            </a>
-            <a
-              href="#"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-              aria-label="Instagram"
-            >
-              <Instagram className="w-5 h-5" />
-            </a>
-            <a
-              href="#"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-              aria-label="LinkedIn"
-            >
-              <Linkedin className="w-5 h-5" />
-            </a>
-            <a
-              href="#"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-              aria-label="Twitter"
-            >
-              <Twitter className="w-5 h-5" />
-            </a>
-          </div>
         </div>
       </div>
     </footer>

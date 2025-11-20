@@ -1,15 +1,18 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import { Menu, ChevronRight, Sparkles, X } from "lucide-react";
 import {
   Sheet,
   SheetContent,
+  SheetHeader,
+  SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { type NavItem } from "@/lib/config/navigation";
 import { cn } from "@/lib/utils";
+import { ChevronRight, Menu } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
+import { Logo } from "./logo";
 
 interface MobileNavProps {
   items: NavItem[];
@@ -43,7 +46,7 @@ export function MobileNav({ items, className }: MobileNavProps) {
         <button
           className={cn(
             "md:hidden p-2 -mr-2 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white transition-colors",
-            className
+            className,
           )}
           aria-label="Open navigation menu"
         >
@@ -54,24 +57,11 @@ export function MobileNav({ items, className }: MobileNavProps) {
         side="right"
         className="w-full sm:max-w-md border-zinc-200 dark:border-zinc-800 p-0"
       >
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-6 border-b border-zinc-200 dark:border-zinc-800">
-          <Link
-            href="/"
-            onClick={handleLinkClick}
-            className="flex items-center gap-2 text-xl font-bold text-black dark:text-white"
-          >
-            <Sparkles className="size-5" />
-            <span className="tracking-tight">JimModel</span>
-          </Link>
-          <button
-            onClick={() => setOpen(false)}
-            className="p-2 -mr-2 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white transition-colors"
-            aria-label="Close menu"
-          >
-            <X className="size-5" />
-          </button>
-        </div>
+        <SheetHeader className="px-6 py-6 border-b border-zinc-200 dark:border-zinc-800 space-y-0">
+          <SheetTitle asChild>
+            <Logo size="md" showText={true} onClick={handleLinkClick} />
+          </SheetTitle>
+        </SheetHeader>
 
         {/* Navigation */}
         <nav className="flex flex-col gap-1 p-4">
@@ -91,7 +81,7 @@ export function MobileNav({ items, className }: MobileNavProps) {
                       <ChevronRight
                         className={cn(
                           "size-4 text-zinc-600 dark:text-zinc-400 transition-transform duration-200",
-                          isExpanded && "rotate-90"
+                          isExpanded && "rotate-90",
                         )}
                       />
                     </button>

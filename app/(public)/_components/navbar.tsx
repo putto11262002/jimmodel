@@ -2,8 +2,8 @@
 
 import { publicNavigation } from "@/lib/config/navigation";
 import { cn } from "@/lib/utils";
-import Link from "next/link";
 import { DesktopNav } from "./desktop-nav";
+import { Logo } from "./logo";
 import { MobileNav } from "./mobile-nav";
 
 interface NavbarProps {
@@ -20,12 +20,7 @@ export function Navbar({ className }: NavbarProps) {
     >
       <div className="max-w-7xl mx-auto flex h-16 items-center justify-between px-6 sm:px-8">
         {/* Logo / Brand */}
-        <Link
-          href="/"
-          className="flex items-center gap-2 text-2xl font-bold text-black dark:text-white group"
-        >
-          <span className="font-heading tracking-tight">J.I.M.</span>
-        </Link>
+        <Logo size="md" showText={false} />
 
         {/* Desktop Navigation */}
         <DesktopNav items={publicNavigation} />

@@ -46,7 +46,7 @@ export async function generateMetadata({
   const categoryTitle = category.charAt(0).toUpperCase() + category.slice(1);
 
   return {
-    title: `${categoryTitle} Models | JimModel`,
+    title: `${categoryTitle} Models`,
     description: `Browse our collection of ${categoryTitle.toLowerCase()} models. Professional modeling agency with diverse talent.`,
   };
 }
