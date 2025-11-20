@@ -10,7 +10,7 @@ interface FeaturedModelsProps {
   models: (Model & { images: ModelImage[] })[];
 }
 
-export function FeaturedModels({ models }: FeaturedModelsProps) {
+export function ModelBandClient({ models }: FeaturedModelsProps) {
   const topRowRef = useRef<HTMLDivElement>(null);
   const bottomRowRef = useRef<HTMLDivElement>(null);
 
