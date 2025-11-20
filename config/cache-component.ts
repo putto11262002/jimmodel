@@ -39,6 +39,14 @@ export const cacheComponentConfig = {
       expire: WEEK * 8,
     },
   },
+  contactPage: {
+    tag: ["contact"],
+    profile: {
+      stale: HOUR,
+      revalidate: WEEK * 4,
+      expire: WEEK * 8,
+    },
+  },
 } as const;
 
 type CacheProfiles = {
