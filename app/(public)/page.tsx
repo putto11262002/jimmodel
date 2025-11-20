@@ -1,5 +1,4 @@
 import { DualCta } from "@/app/(public)/_components/dual-cta";
-import { Footer } from "@/app/(public)/_components/footer";
 import { Hero } from "@/app/(public)/_components/hero";
 import { PortfolioShowcase } from "@/app/(public)/_components/portfolio-showcase";
 import { TrustIndicators } from "@/app/(public)/_components/trust-indicators";
@@ -20,7 +19,6 @@ export default async function LandingPage() {
         <PortfolioShowcase />
       </div>
       <DualCta />
-      <Footer />
     </main>
   );
 }

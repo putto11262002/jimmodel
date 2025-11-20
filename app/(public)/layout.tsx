@@ -1,4 +1,5 @@
 import { Navbar } from "@/app/(public)/_components/navbar";
+import { Footer } from "@/app/(public)/_components/footer";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -76,6 +77,7 @@ export default function PublicLayout({
     <div className="">
       <Navbar />
       {children}
+      <Footer />
     </div>
   );
 }
