@@ -19,28 +19,41 @@ export const contactSubjectEnum = z.enum(FORM_SUBMISSION_SUBJECTS);
 export const contactSubjects = FORM_SUBMISSION_SUBJECTS;
 
 /**
+ * Phone number validation regex
+ * Allows various formats: (123) 456-7890, 123-456-7890, 123.456.7890, 1234567890
+ * Also accepts international formats with + prefix
+ */
+const phoneRegex = /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/;
+
+/**
  * Submit contact form schema
  */
 export const submitContactFormSchema = z.object({
   name: z
     .string()
-    .min(1, "Name is required")
-    .max(255, "Name must be less than 255 characters"),
+    .min(1, "Please tell us your name")
+    .max(255, "Name should be less than 255 characters"),
   email: z
     .string()
-    .min(1, "Email is required")
+    .min(1, "Please provide your email address")
     .email("Please enter a valid email address")
-    .max(255, "Email must be less than 255 characters"),
+    .max(255, "Email should be less than 255 characters"),
   phone: z
     .string()
-    .max(50, "Phone must be less than 50 characters")
+    .refine(
+      (val) => val === "" || phoneRegex.test(val),
+      "Please enter a valid phone number (e.g., +1 (555) 000-0000)"
+    )
     .optional()
     .nullable(),
-  subject: contactSubjectEnum,
+  subject: contactSubjectEnum.refine(
+    (val) => val && val.length > 0,
+    "Please select a subject category"
+  ),
   message: z
     .string()
-    .min(10, "Message must be at least 10 characters")
-    .max(5000, "Message must be less than 5000 characters"),
+    .min(10, "Message should be at least 10 characters long")
+    .max(5000, "Message should be less than 5000 characters"),
 });
 
 export type SubmitContactFormInput = z.infer<typeof submitContactFormSchema>;
