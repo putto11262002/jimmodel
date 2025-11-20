@@ -54,8 +54,17 @@ export async function sendContactFormNotificationToAdmins(
   }
 
   // Build from address from environment variables
-  const fromEmail = process.env.FROM_EMAIL || "noreply@jimmodel.com";
-  const fromName = process.env.FROM_NAME || "Jimmodel Contact Form";
+  const fromEmail = process.env.FROM_EMAIL;
+  const fromName = process.env.FROM_NAME;
+
+  if (!fromEmail || !fromName) {
+    console.warn("Email sending skipped: FROM_EMAIL and FROM_NAME environment variables not configured");
+    return {
+      success: false,
+      error: "Email configuration incomplete - FROM_EMAIL and FROM_NAME required",
+    };
+  }
+
   const fromAddress = `${fromName} <${fromEmail}>`;
 
   return sendEmail({
