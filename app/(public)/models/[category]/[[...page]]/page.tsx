@@ -128,7 +128,7 @@ export default async function ModelListingPage({ params }: PageProps) {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
               {result.items.map((model) => (
                 <ModelCard key={model.id} model={model} />
               ))}
