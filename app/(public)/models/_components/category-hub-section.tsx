@@ -70,7 +70,7 @@ export function CategoryHubSection({
         <MobilePattern images={imagesWithNames} />
 
         {/* Overlay */}
-        <CategoryOverlay category={category} count={count} showCount />
+        <CategoryOverlay category={category} />
       </div>
     </Link>
   );

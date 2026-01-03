@@ -42,32 +42,44 @@ function BentoImageItem({ image, alt }: BentoImageProps) {
 
 // Pattern 1 - Female (Hero-inspired): grid-cols-6 grid-rows-6
 export function Pattern1Female({ images }: { images: (ModelImage & { modelName?: string })[] }) {
+  const hasImages = images.length > 0;
+
   return (
     <div className="hidden lg:grid grid-cols-6 grid-rows-6 gap-3 h-full w-full">
       {/* Large left - col-span-3 row-span-4 */}
-      <div className="col-span-3 row-span-4">
-        <BentoImageItem image={images[0]} alt={images[0]?.modelName || "Model"} />
-      </div>
+      {hasImages && (
+        <div className="col-span-3 row-span-4">
+          <BentoImageItem image={images[0]} alt={images[0]?.modelName || "Model"} />
+        </div>
+      )}
 
       {/* Top right - col-span-3 row-span-2 */}
-      <div className="col-span-3 row-span-2">
-        <BentoImageItem image={images[1]} alt={images[1]?.modelName || "Model"} />
-      </div>
+      {images.length > 1 && (
+        <div className="col-span-3 row-span-2">
+          <BentoImageItem image={images[1]} alt={images[1]?.modelName || "Model"} />
+        </div>
+      )}
 
       {/* Middle right - col-span-3 row-span-2 */}
-      <div className="col-span-3 row-span-2">
-        <BentoImageItem image={images[2]} alt={images[2]?.modelName || "Model"} />
-      </div>
+      {images.length > 2 && (
+        <div className="col-span-3 row-span-2">
+          <BentoImageItem image={images[2]} alt={images[2]?.modelName || "Model"} />
+        </div>
+      )}
 
       {/* Bottom left - col-span-2 row-span-2 */}
-      <div className="col-span-2 row-span-2">
-        <BentoImageItem image={images[3]} alt={images[3]?.modelName || "Model"} />
-      </div>
+      {images.length > 3 && (
+        <div className="col-span-2 row-span-2">
+          <BentoImageItem image={images[3]} alt={images[3]?.modelName || "Model"} />
+        </div>
+      )}
 
       {/* Bottom wide - col-span-4 row-span-2 */}
-      <div className="col-span-4 row-span-2">
-        <BentoImageItem image={images[4]} alt={images[4]?.modelName || "Model"} />
-      </div>
+      {images.length > 4 && (
+        <div className="col-span-4 row-span-2">
+          <BentoImageItem image={images[4]} alt={images[4]?.modelName || "Model"} />
+        </div>
+      )}
     </div>
   );
 }
@@ -93,24 +105,32 @@ export function Pattern2Male({ images }: { images: (ModelImage & { modelName?: s
   return (
     <div className="hidden lg:grid grid-cols-2 grid-rows-3 gap-3 h-full w-full">
       {/* Left portrait - col-span-1 row-span-2 */}
-      <div className="col-span-1 row-span-2">
-        <BentoImageItem image={images[0]} alt={images[0]?.modelName || "Model"} />
-      </div>
+      {images.length > 0 && (
+        <div className="col-span-1 row-span-2">
+          <BentoImageItem image={images[0]} alt={images[0]?.modelName || "Model"} />
+        </div>
+      )}
 
       {/* Right portrait - col-span-1 row-span-2 */}
-      <div className="col-span-1 row-span-2">
-        <BentoImageItem image={images[1]} alt={images[1]?.modelName || "Model"} />
-      </div>
+      {images.length > 1 && (
+        <div className="col-span-1 row-span-2">
+          <BentoImageItem image={images[1]} alt={images[1]?.modelName || "Model"} />
+        </div>
+      )}
 
       {/* Bottom left - col-span-1 row-span-1 */}
-      <div className="col-span-1 row-span-1">
-        <BentoImageItem image={images[2]} alt={images[2]?.modelName || "Model"} />
-      </div>
+      {images.length > 2 && (
+        <div className="col-span-1 row-span-1">
+          <BentoImageItem image={images[2]} alt={images[2]?.modelName || "Model"} />
+        </div>
+      )}
 
       {/* Bottom right - col-span-1 row-span-1 */}
-      <div className="col-span-1 row-span-1">
-        <BentoImageItem image={images[3]} alt={images[3]?.modelName || "Model"} />
-      </div>
+      {images.length > 3 && (
+        <div className="col-span-1 row-span-1">
+          <BentoImageItem image={images[3]} alt={images[3]?.modelName || "Model"} />
+        </div>
+      )}
     </div>
   );
 }
@@ -136,19 +156,25 @@ export function Pattern3NonBinary({ images }: { images: (ModelImage & { modelNam
   return (
     <div className="hidden lg:grid grid-cols-3 grid-rows-2 gap-3 h-full w-full">
       {/* Large hero left - col-span-2 row-span-2 */}
-      <div className="col-span-2 row-span-2">
-        <BentoImageItem image={images[0]} alt={images[0]?.modelName || "Model"} />
-      </div>
+      {images.length > 0 && (
+        <div className="col-span-2 row-span-2">
+          <BentoImageItem image={images[0]} alt={images[0]?.modelName || "Model"} />
+        </div>
+      )}
 
       {/* Top right - col-span-1 row-span-1 */}
-      <div className="col-span-1 row-span-1">
-        <BentoImageItem image={images[1]} alt={images[1]?.modelName || "Model"} />
-      </div>
+      {images.length > 1 && (
+        <div className="col-span-1 row-span-1">
+          <BentoImageItem image={images[1]} alt={images[1]?.modelName || "Model"} />
+        </div>
+      )}
 
       {/* Bottom right - col-span-1 row-span-1 */}
-      <div className="col-span-1 row-span-1">
-        <BentoImageItem image={images[2]} alt={images[2]?.modelName || "Model"} />
-      </div>
+      {images.length > 2 && (
+        <div className="col-span-1 row-span-1">
+          <BentoImageItem image={images[2]} alt={images[2]?.modelName || "Model"} />
+        </div>
+      )}
     </div>
   );
 }
@@ -174,24 +200,32 @@ export function Pattern4Kids({ images }: { images: (ModelImage & { modelName?: s
   return (
     <div className="hidden lg:grid grid-cols-4 grid-rows-4 gap-3 h-full w-full">
       {/* Top left - col-span-2 row-span-2 */}
-      <div className="col-span-2 row-span-2">
-        <BentoImageItem image={images[0]} alt={images[0]?.modelName || "Model"} />
-      </div>
+      {images.length > 0 && (
+        <div className="col-span-2 row-span-2">
+          <BentoImageItem image={images[0]} alt={images[0]?.modelName || "Model"} />
+        </div>
+      )}
 
       {/* Top right - col-span-2 row-span-2 */}
-      <div className="col-span-2 row-span-2">
-        <BentoImageItem image={images[1]} alt={images[1]?.modelName || "Model"} />
-      </div>
+      {images.length > 1 && (
+        <div className="col-span-2 row-span-2">
+          <BentoImageItem image={images[1]} alt={images[1]?.modelName || "Model"} />
+        </div>
+      )}
 
       {/* Bottom left - col-span-2 row-span-2 */}
-      <div className="col-span-2 row-span-2">
-        <BentoImageItem image={images[2]} alt={images[2]?.modelName || "Model"} />
-      </div>
+      {images.length > 2 && (
+        <div className="col-span-2 row-span-2">
+          <BentoImageItem image={images[2]} alt={images[2]?.modelName || "Model"} />
+        </div>
+      )}
 
       {/* Bottom right - col-span-2 row-span-2 */}
-      <div className="col-span-2 row-span-2">
-        <BentoImageItem image={images[3]} alt={images[3]?.modelName || "Model"} />
-      </div>
+      {images.length > 3 && (
+        <div className="col-span-2 row-span-2">
+          <BentoImageItem image={images[3]} alt={images[3]?.modelName || "Model"} />
+        </div>
+      )}
     </div>
   );
 }
@@ -217,24 +251,32 @@ export function Pattern5Seniors({ images }: { images: (ModelImage & { modelName?
   return (
     <div className="hidden lg:grid grid-cols-3 grid-rows-3 gap-3 h-full w-full">
       {/* Left tall - col-span-2 row-span-3 */}
-      <div className="col-span-2 row-span-3">
-        <BentoImageItem image={images[0]} alt={images[0]?.modelName || "Model"} />
-      </div>
+      {images.length > 0 && (
+        <div className="col-span-2 row-span-3">
+          <BentoImageItem image={images[0]} alt={images[0]?.modelName || "Model"} />
+        </div>
+      )}
 
       {/* Top right - col-span-1 row-span-1 */}
-      <div className="col-span-1 row-span-1">
-        <BentoImageItem image={images[1]} alt={images[1]?.modelName || "Model"} />
-      </div>
+      {images.length > 1 && (
+        <div className="col-span-1 row-span-1">
+          <BentoImageItem image={images[1]} alt={images[1]?.modelName || "Model"} />
+        </div>
+      )}
 
       {/* Middle right - col-span-1 row-span-1 */}
-      <div className="col-span-1 row-span-1">
-        <BentoImageItem image={images[2]} alt={images[2]?.modelName || "Model"} />
-      </div>
+      {images.length > 2 && (
+        <div className="col-span-1 row-span-1">
+          <BentoImageItem image={images[2]} alt={images[2]?.modelName || "Model"} />
+        </div>
+      )}
 
       {/* Bottom right - col-span-1 row-span-1 */}
-      <div className="col-span-1 row-span-1">
-        <BentoImageItem image={images[3]} alt={images[3]?.modelName || "Model"} />
-      </div>
+      {images.length > 3 && (
+        <div className="col-span-1 row-span-1">
+          <BentoImageItem image={images[3]} alt={images[3]?.modelName || "Model"} />
+        </div>
+      )}
     </div>
   );
 }
