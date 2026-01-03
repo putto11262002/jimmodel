@@ -31,7 +31,7 @@ export default async function ModelsPage() {
   return (
     <div>
       {/* Breadcrumb */}
-      <div className="container mx-auto px-4 py-6 md:py-8">
+      <div className="container mx-auto px-4 py-4 md:py-6">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
@@ -46,21 +46,20 @@ export default async function ModelsPage() {
       </div>
 
       {/* Header */}
-      <div className="container mx-auto px-4 py-8 md:py-12">
-        <div className="text-center mb-12 md:mb-16">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-light text-foreground mb-3">
+      <div className="container mx-auto px-4 py-6 md:py-8">
+        <div className="text-center mb-8 md:mb-10">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-light text-foreground mb-2">
             Our Talent
           </h1>
-          <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
-            Explore our diverse roster of professional models across multiple categories.
-            Find the perfect fit for your project.
+          <p className="text-sm md:text-base text-muted-foreground max-w-2xl mx-auto">
+            Explore our diverse roster of professional models across all categories.
           </p>
         </div>
       </div>
 
       {/* Category Hub Grid */}
-      <div className="container mx-auto px-4 pb-16 md:pb-24">
-        <div className="space-y-12 md:space-y-16">
+      <div className="container mx-auto px-4 pb-12 md:pb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {categoryData.map((category) => (
             <CategoryHubSection
               key={category.category}

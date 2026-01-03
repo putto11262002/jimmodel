@@ -62,7 +62,7 @@ export function CategoryHubSection({
 
   return (
     <Link href={`/models/${category}`} className="group block">
-      <div className="relative w-full aspect-square lg:aspect-[16/10] rounded-2xl overflow-hidden bg-muted hover:shadow-2xl hover:scale-[1.02] transition-all duration-300">
+      <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-muted hover:shadow-2xl hover:scale-[1.02] transition-all duration-300">
         {/* Desktop Pattern */}
         <DesktopPattern images={imagesWithNames} />
 
