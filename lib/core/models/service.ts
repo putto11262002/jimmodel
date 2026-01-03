@@ -462,6 +462,7 @@ export async function reorderPortfolioImages(input: ReorderModelImagesInput) {
 /**
  * Get models for category hub page
  * Fetches 6 published models per category for hub display
+ * If a category has no models, fetches 6 models from all categories
  * Executes all queries in parallel for performance
  */
 export async function getModelsForCategoryHub() {
@@ -489,9 +490,25 @@ export async function getModelsForCategoryHub() {
           .then((result) => result[0]?.count || 0),
       ]);
 
+      // If category has no models, fetch from all published models
+      let modelsToDisplay = categoryModels;
+      if (categoryModels.length === 0) {
+        modelsToDisplay = await db.query.models.findMany({
+          where: eq(models.published, true),
+          orderBy: desc(models.createdAt),
+          limit: MODELS_PER_CATEGORY,
+          with: {
+            images: {
+              limit: 1,
+              orderBy: asc(modelImages.order),
+            },
+          },
+        });
+      }
+
       return {
         category,
-        models: categoryModels,
+        models: modelsToDisplay,
         count: totalCount,
       } as CategoryHubData;
     }),
