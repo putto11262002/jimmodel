@@ -66,7 +66,7 @@ function ProfileImage({
   altText: string;
 }) {
   return (
-    <div className="relative aspect-[3/4] md:aspect-[4/5] rounded-lg overflow-hidden bg-muted max-h-[400px] md:max-h-[480px]">
+    <div className="relative aspect-[3/4] md:aspect-[4/5] rounded-lg overflow-hidden bg-muted w-full md:max-h-[480px]">
       {imageUrl ? (
         <Image
           src={imageUrl}
@@ -117,34 +117,41 @@ function StatItem({
 }
 
 function StatsGrid({ model, age }: { model: Model; age: number | null }) {
+  const stats = [
+    { label: "Age", value: age !== null ? `${age} years` : null },
+    {
+      label: "Height",
+      value: model.height ? `${model.height} cm` : null,
+    },
+    {
+      label: "Weight",
+      value: model.weight ? `${model.weight} kg` : null,
+    },
+    { label: "Hips", value: model.hips ? `${model.hips} cm` : null },
+    {
+      label: "Hair Color",
+      value: model.hairColor ? (
+        <span className="capitalize">{model.hairColor}</span>
+      ) : null,
+    },
+    {
+      label: "Eye Color",
+      value: model.eyeColor ? (
+        <span className="capitalize">{model.eyeColor}</span>
+      ) : null,
+    },
+  ];
+
   return (
-    <div className="grid grid-cols-2 gap-3 md:gap-4 p-4 md:p-6 rounded-lg border bg-card">
-      <StatItem label="Age" value={age !== null ? `${age} years` : null} />
-      <StatItem
-        label="Height"
-        value={model.height ? `${model.height} cm` : null}
-      />
-      <StatItem
-        label="Weight"
-        value={model.weight ? `${model.weight} kg` : null}
-      />
-      <StatItem label="Hips" value={model.hips ? `${model.hips} cm` : null} />
-      <StatItem
-        label="Hair Color"
-        value={
-          model.hairColor ? (
-            <span className="capitalize">{model.hairColor}</span>
-          ) : null
-        }
-      />
-      <StatItem
-        label="Eye Color"
-        value={
-          model.eyeColor ? (
-            <span className="capitalize">{model.eyeColor}</span>
-          ) : null
-        }
-      />
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+      {stats.map((stat, index) => (
+        <div
+          key={stat.label}
+          className="pb-4 md:pb-0 border-b md:border-0 last:border-0"
+        >
+          <StatItem label={stat.label} value={stat.value} />
+        </div>
+      ))}
     </div>
   );
 }
