@@ -7,7 +7,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { cacheComponentConfig } from "@/config/cache-component";
 import { getModelsForCategoryHub } from "@/lib/core/models/service";
 import { CategoryHubSection } from "./_components/category-hub-section";
 import { getCategoryPattern } from "./_utils/pattern-mapper";
@@ -20,11 +19,6 @@ export const metadata: Metadata = {
 
 export default async function ModelsPage() {
   "use cache";
-  const { stale, revalidate, expire } = cacheComponentConfig.categoryHub.profile;
-
-  // This tells Next.js to cache this page
-  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-  stale, revalidate, expire;
 
   const categoryData = await getModelsForCategoryHub();
 
