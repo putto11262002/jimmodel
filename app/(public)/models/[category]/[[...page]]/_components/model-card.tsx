@@ -47,7 +47,7 @@ export function ModelCard({ model, className }: ModelCardProps) {
         )}
 
         {/* Status Badge Overlay */}
-        <div className="absolute top-3 right-3 z-10">
+        <div className="absolute top-3 right-3 z-10 hidden md:block">
           <span className="px-3 py-1.5 text-xs font-semibold bg-primary/95 text-primary-foreground rounded-full backdrop-blur-sm shadow-lg">
             {statusBadge}
           </span>
