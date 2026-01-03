@@ -47,6 +47,14 @@ export const cacheComponentConfig = {
       expire: WEEK * 8,
     },
   },
+  categoryHub: {
+    tag: ["models", "category-hub"],
+    profile: {
+      stale: HOUR,
+      revalidate: DAY * 7,
+      expire: DAY * 30,
+    },
+  },
 } as const;
 
 type CacheProfiles = {

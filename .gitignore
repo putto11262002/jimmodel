@@ -44,3 +44,4 @@ temp
 .mcp.json
 .playwright-mcp
 temp/
+.env*.local

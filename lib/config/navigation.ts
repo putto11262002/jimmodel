@@ -27,7 +27,7 @@ export interface NavItem {
 export const publicNavigation: NavItem[] = [
   {
     label: "Models",
-    href: "#",
+    href: "/models",
     description: "Browse our diverse talent roster",
     children: [
       {

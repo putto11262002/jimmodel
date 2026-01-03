@@ -6,6 +6,7 @@
 
 import { db } from "@/db";
 import { modelImages, models } from "@/db/schema";
+import { CATEGORIES } from "@/lib/data/categories";
 import { createPaginatedResult } from "@/lib/types/common";
 import {
   and,
@@ -27,6 +28,7 @@ import {
 import { deleteFromBlob, uploadToBlob } from "../storage";
 import type {
   BulkUpdatePublishedInput,
+  CategoryHubData,
   CreateModelInput,
   DeleteModelImageInput,
   DeleteModelInput,
@@ -455,4 +457,45 @@ export async function reorderPortfolioImages(input: ReorderModelImagesInput) {
     success: true,
     updatedCount: input.images.length,
   };
+}
+
+/**
+ * Get models for category hub page
+ * Fetches 6 published models per category for hub display
+ * Executes all queries in parallel for performance
+ */
+export async function getModelsForCategoryHub() {
+  const MODELS_PER_CATEGORY = 6;
+
+  // Execute all category queries in parallel
+  const results = await Promise.all(
+    CATEGORIES.map(async (category) => {
+      const [categoryModels, totalCount] = await Promise.all([
+        db.query.models.findMany({
+          where: and(eq(models.category, category), eq(models.published, true)),
+          orderBy: desc(models.createdAt),
+          limit: MODELS_PER_CATEGORY,
+          with: {
+            images: {
+              limit: 1,
+              orderBy: asc(modelImages.order),
+            },
+          },
+        }),
+        db
+          .select({ count: count(models.id) })
+          .from(models)
+          .where(and(eq(models.category, category), eq(models.published, true)))
+          .then((result) => result[0]?.count || 0),
+      ]);
+
+      return {
+        category,
+        models: categoryModels,
+        count: totalCount,
+      } as CategoryHubData;
+    }),
+  );
+
+  return results;
 }

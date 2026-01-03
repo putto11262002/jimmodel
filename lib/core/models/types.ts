@@ -154,3 +154,54 @@ export interface ReorderModelImagesInput {
   modelId: string;
   images: ImageOrderUpdate[];
 }
+
+/**
+ * Category hub page data
+ * Contains models for a single category to display on hub
+ */
+export interface CategoryHubData {
+  category: Category;
+  models: (Model & { images: ModelImage[] })[];
+  count: number;
+}
+
+/**
+ * Model database type (for inference)
+ */
+export interface Model {
+  id: string;
+  name: string;
+  nickName?: string | null;
+  gender: Gender;
+  category: Category;
+  dateOfBirth?: Date | null;
+  nationality?: Nationality | null;
+  ethnicity?: string | null;
+  talents?: string[] | null;
+  bio?: string | null;
+  experiences?: string[] | null;
+  local: boolean;
+  inTown: boolean;
+  published: boolean;
+  height?: number | null;
+  weight?: number | null;
+  hips?: number | null;
+  hairColor?: HairColor | null;
+  eyeColor?: EyeColor | null;
+  profileImageURL?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Model image database type
+ */
+export interface ModelImage {
+  id: string;
+  modelId: string;
+  url: string;
+  type?: ImageType | null;
+  order: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
