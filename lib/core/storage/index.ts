@@ -2,17 +2,20 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 
+function getEnv() {
+  return getCloudflareContext().env;
+}
+
 function getR2Bucket(): R2Bucket {
-  const ctx = getCloudflareContext();
-  const bucket = (ctx.env as Record<string, unknown>).R2_STORE as R2Bucket | undefined;
-  if (!bucket) {
+  const env = getEnv();
+  if (!env.R2_STORE) {
     throw new Error("R2_STORE binding not found. Ensure wrangler.jsonc has the R2 bucket binding.");
   }
-  return bucket;
+  return env.R2_STORE;
 }
 
 function getPublicUrl(key: string): string {
-  const publicDomain = process.env.R2_PUBLIC_DOMAIN;
+  const publicDomain = getEnv().R2_PUBLIC_DOMAIN;
   if (publicDomain) {
     return `https://${publicDomain}/${key}`;
   }
@@ -49,7 +52,7 @@ export async function uploadToBlob(
 }
 
 export async function deleteFromBlob(url: string): Promise<void> {
-  const publicDomain = process.env.R2_PUBLIC_DOMAIN;
+  const publicDomain = getEnv().R2_PUBLIC_DOMAIN;
   let key: string;
 
   if (publicDomain) {

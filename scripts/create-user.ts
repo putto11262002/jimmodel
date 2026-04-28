@@ -126,7 +126,7 @@ async function createUser() {
     });
 
     const response = await auth.handler(request);
-    const result = await response.json();
+    const result = (await response.json()) as { error?: string };
 
     if (!response.ok) {
       error(`Failed to create user: ${result.error || "Unknown error"}`);
