@@ -1,0 +1,36 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "main": ".open-next/worker.js",
+  "name": "jimmodel",
+  "compatibility_date": "2024-12-30",
+  "compatibility_flags": [
+    "nodejs_compat",
+    "global_fetch_strictly_public"
+  ],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "jimmodel"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "R2_STORE",
+      "bucket_name": "jimmodel"
+    }
+  ],
+  "images": {
+    "binding": "IMAGES"
+  },
+  "vars": {
+    "BETTER_AUTH_TRUST_HOST": "true",
+    "R2_ENDPOINT": "https://c9546990e51271c45a2c1813341b9098.r2.cloudflarestorage.com",
+    "R2_ACCESS_KEY_ID": "a71200c4a6954b47aee5e2793dae0038",
+    "R2_BUCKET": "jimmodel",
+    "R2_PUBLIC_DOMAIN": "pub-9f60895f20504ca6b35927a571998669.r2.dev"
+  }
+}

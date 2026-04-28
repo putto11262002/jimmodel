@@ -1,7 +1,7 @@
 "use client";
 
 import { Separator } from "@/components/ui/separator";
-import { motion, useInView, useMotionValue, useSpring } from "framer-motion";
+import { motion, useInView, useMotionValue, useSpring } from "@/lib/motion";
 import { useEffect, useRef, useState } from "react";
 
 const typewriterWords = ["Excellence", "Talent", "Innovation", "Success"];

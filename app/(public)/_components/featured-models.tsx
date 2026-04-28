@@ -1,7 +1,7 @@
 "use client";
 
 import type { Model, ModelImage } from "@/db/schema";
-import { motion } from "framer-motion";
+import { motion } from "@/lib/motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
