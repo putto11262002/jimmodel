@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, forwardRef } from "react";
-import { motion } from "framer-motion";
+import { motion } from "@/lib/motion";
 import { Award, Globe, LucideIcon, Camera, Images } from "lucide-react";
 
 

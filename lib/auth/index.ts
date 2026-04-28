@@ -40,8 +40,8 @@ export const auth = betterAuth({
       enabled: false,
     },
   },
-  trustedOrigins: process.env.VERCEL_URL
-    ? [`https://${process.env.VERCEL_URL}`]
+  trustedOrigins: process.env.NEXT_PUBLIC_APP_URL
+    ? [process.env.NEXT_PUBLIC_APP_URL]
     : ["http://localhost:3000"],
 });
 

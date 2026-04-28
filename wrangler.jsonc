@@ -1,0 +1,37 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "main": ".open-next/worker.js",
+  "name": "jimmodel",
+  "compatibility_date": "2024-12-30",
+  "compatibility_flags": [
+    "nodejs_compat",
+    "global_fetch_strictly_public"
+  ],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "jimmodel"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "R2_STORE",
+      "bucket_name": "jimmodel"
+    }
+  ],
+  "images": {
+    "binding": "IMAGES"
+  },
+  "vars": {
+    "BETTER_AUTH_TRUST_HOST": "true",
+    "R2_PUBLIC_DOMAIN": "pub-9f60895f20504ca6b35927a571998669.r2.dev",
+    "NEXT_PUBLIC_APP_URL": "https://www.jimmodel.com",
+    "FROM_EMAIL": "noreply@jimmodel.com",
+    "FROM_NAME": "J.I.M. Model Agency",
+    "ADMIN_NOTIFICATION_EMAILS": ""
+  }
+}

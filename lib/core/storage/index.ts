@@ -1,16 +1,26 @@
-/**
- * Image storage utilities (platform-specific: Vercel Blob)
- * Handles upload and deletion from Vercel Blob storage
- */
-
-import { del, put } from "@vercel/blob";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 
-/**
- * Upload an image buffer to Vercel Blob storage
- * Returns the URL of the uploaded image
- */
+function getEnv() {
+  return getCloudflareContext().env;
+}
+
+function getR2Bucket(): R2Bucket {
+  const env = getEnv();
+  if (!env.R2_STORE) {
+    throw new Error("R2_STORE binding not found. Ensure wrangler.jsonc has the R2 bucket binding.");
+  }
+  return env.R2_STORE;
+}
+
+function getPublicUrl(key: string): string {
+  const publicDomain = getEnv().R2_PUBLIC_DOMAIN;
+  if (publicDomain) {
+    return `https://${publicDomain}/${key}`;
+  }
+  return key;
+}
 
 export async function uploadToBlob(
   buffer: Buffer,
@@ -20,30 +30,40 @@ export async function uploadToBlob(
   options: {
     cacheControlMaxAge?: number;
   } = {
-    cacheControlMaxAge: 31536000, // 1 year
+    cacheControlMaxAge: 31536000,
   },
 ): Promise<string> {
-  // Generate filename with UUID if not provided
   const extension = contentType.split("/")[1] || "bin";
   const finalFilename = filename || `${uuidv4()}.${extension}`;
 
-  const pathname = path.join(
+  const key = path.join(
     ...[...(prefix ? [prefix] : []), finalFilename],
   );
-  const blob = await put(pathname, buffer, {
-    allowOverwrite: false,
-    access: "public",
-    contentType,
-    addRandomSuffix: true,
-    ...options,
+
+  const bucket = getR2Bucket();
+  await bucket.put(key, buffer, {
+    httpMetadata: {
+      contentType,
+      cacheControl: `public, max-age=${options.cacheControlMaxAge}`,
+    },
   });
 
-  return blob.url;
+  return getPublicUrl(key);
 }
 
-/**
- * Delete an image from Vercel Blob storage by URL
- */
 export async function deleteFromBlob(url: string): Promise<void> {
-  await del(url);
+  const publicDomain = getEnv().R2_PUBLIC_DOMAIN;
+  let key: string;
+
+  if (publicDomain) {
+    key = url.replace(`https://${publicDomain}/`, "");
+  } else {
+    const urlObj = new URL(url);
+    key = urlObj.pathname.startsWith("/")
+      ? urlObj.pathname.slice(1)
+      : urlObj.pathname;
+  }
+
+  const bucket = getR2Bucket();
+  await bucket.delete(key);
 }

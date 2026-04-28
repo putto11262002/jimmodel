@@ -200,7 +200,7 @@ export const listModels: ServerAction<
 /**
  * Delete a model
  * Authenticated action - requires login
- * Also deletes all associated images from Vercel Blob storage
+ * Also deletes all associated images from R2 storage
  */
 export const deleteModel: ServerAction<
   DeleteModelInput,
@@ -376,7 +376,7 @@ export const uploadModelImage: ServerAction<
 /**
  * Delete a portfolio image
  * Authenticated action - requires login
- * Deletes from both database and Vercel Blob storage
+ * Deletes from both database and R2 storage
  */
 export const deleteModelImage: ServerAction<
   DeleteModelImageInput,

@@ -188,7 +188,7 @@ export async function createUser(argv: ArgumentsCamelCase<CreateArgs>): Promise<
     });
 
     const response = await auth.handler(request);
-    const result = await response.json();
+    const result = (await response.json()) as { error?: string };
 
     if (!response.ok) {
       throw new Error(`Failed to create user: ${result.error || "Unknown error"}`);

@@ -45,3 +45,8 @@ temp
 .playwright-mcp
 temp/
 .env*.local
+
+# open-next
+.open-next/
+.dev.vars
+.wrangler/

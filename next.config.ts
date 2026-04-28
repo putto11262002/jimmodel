@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   experimental: {
-    cssChunking: true, // https://nextjs.org/docs/app/api-reference/config/next-config-js/cssChunking
+    cssChunking: true,
   },
   cacheComponents: true,
   images: {
@@ -13,6 +13,12 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "**.blob.vercel-storage.com",
+        port: "",
+        search: "",
+      },
+      {
+        protocol: "https",
+        hostname: "pub-9f60895f20504ca6b35927a571998669.r2.dev",
         port: "",
         search: "",
       },
@@ -38,3 +44,6 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
+initOpenNextCloudflareForDev();
