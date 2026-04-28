@@ -28,9 +28,10 @@
   },
   "vars": {
     "BETTER_AUTH_TRUST_HOST": "true",
-    "R2_ENDPOINT": "https://c9546990e51271c45a2c1813341b9098.r2.cloudflarestorage.com",
-    "R2_ACCESS_KEY_ID": "a71200c4a6954b47aee5e2793dae0038",
-    "R2_BUCKET": "jimmodel",
-    "R2_PUBLIC_DOMAIN": "pub-9f60895f20504ca6b35927a571998669.r2.dev"
+    "R2_PUBLIC_DOMAIN": "pub-9f60895f20504ca6b35927a571998669.r2.dev",
+    "NEXT_PUBLIC_APP_URL": "https://www.jimmodel.com",
+    "FROM_EMAIL": "noreply@jimmodel.com",
+    "FROM_NAME": "J.I.M. Model Agency",
+    "ADMIN_NOTIFICATION_EMAILS": ""
   }
 }
